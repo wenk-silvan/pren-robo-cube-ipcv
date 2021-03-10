@@ -74,7 +74,8 @@ class Pathfinder:
 
     def find_obstacles(self, cascade, min_area, scale_val, neighbours):
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        for (x, y, w, h) in cascade.detectMultiScale(gray, scale_val, neighbours):
+        obstacles = cascade.detectMultiScale(gray, scale_val, neighbours)
+        for (x, y, w, h) in obstacles:
             if w * h < min_area:
                 continue
             self.obstacles.append(Obstacle(x, y, w, h))

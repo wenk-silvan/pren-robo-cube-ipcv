@@ -1,12 +1,15 @@
 import cv2
 from pathfinder import Pathfinder
+from image_manipulator import ImageManipulator
 
 ################################################################
-CASCADE_PATH = "..\\cascade\\obstacle.xml"
-IMG_PATH = "../images/treppe_mit_hindernisse_1_centered.jpg"
+CASCADE_PATH = "../cascades/obstacle.xml"
+IMG_PATH = "../images/treppe_130_49_cm.jpg"
 #################################################################
 
-img = cv2.imread(IMG_PATH)
+img_raw = cv2.imread(IMG_PATH)
+image_manipulator = ImageManipulator(img_raw)
+img = image_manipulator.transform_to_2d()
 cascade = cv2.CascadeClassifier(CASCADE_PATH)
 finder = Pathfinder(img)
 obstacles = finder.find_obstacles(cascade, min_area=400, scale_val=1.2, neighbours=8)

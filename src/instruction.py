@@ -1,4 +1,3 @@
-from direction import Direction
 
 class Instruction:
     def __init__(self, direction, distance):
