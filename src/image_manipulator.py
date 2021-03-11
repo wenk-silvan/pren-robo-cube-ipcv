@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class ImageManipulator:
@@ -9,10 +8,10 @@ class ImageManipulator:
 
     def find_edges(self):
         # TODO: Determine edges with OpenCV
-        top_left = (320, 260)
-        top_right = (950, 260)
-        bottom_left = (5, 955)
-        bottom_right = (1275, 955)
+        top_left = (350, 260)
+        top_right = (920, 260)
+        bottom_left = (5, 990)
+        bottom_right = (1275, 990)
         return top_left, top_right, bottom_left, bottom_right
 
     def draw_circles(self):

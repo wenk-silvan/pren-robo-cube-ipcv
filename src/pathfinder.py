@@ -17,53 +17,54 @@ HOUGH_LINES_OFFSET = 20
 ROBOCUBE_WIDTH_MILLIMETER = 250
 STAIR_WIDTH_MILLIMETER = 2000
 MATRICE_CELL_SIZE_MILLIMETER = 10
+MIN_LINE_GAP = 60
 
 
 def _draw(p1, p2, img):
-    if img is None: return
+    if img is None:
+        return
     cv2.line(img, p1, p2, (255, 0, 0), 2)
 
 
-def _draw_lines(lines, img, width):
-    if lines is None:
-        return
-    y_values = []
+def _draw_lines(lines, img):
     drawn = []
-
-    for x in range(0, len(lines)):
-        for x1, y1, x2, y2 in lines[x]:
-            if abs(y1 - y2) > 10:
-                continue
-
-            if len(y_values) == 0:
-                p1 = (STAIR_WIDTH_OFFSET, y1)
-                p2 = (width - STAIR_WIDTH_OFFSET, y2)
-                _draw(p1=p1, p2=p2, img=img)
-                y_values.append(y1)
-                drawn.append(Line(p1, p2))
-
-            has_neighbour = False
-            for y in y_values:
-                if len(y_values) > 0 and abs(y - y1) < 30:
-                    has_neighbour = True
-                    break
-
-            if not has_neighbour:
-                p1 = (STAIR_WIDTH_OFFSET, y1)
-                p2 = (width - STAIR_WIDTH_OFFSET, y2)
-                _draw(p1=p1, p2=p2, img=img)
-                y_values.append(y1)
-                drawn.append(Line(p1, p2))
+    img_height, img_width, _ = img.shape
+    for x1, y1, x2, y2 in lines:
+        p1 = (0, y1)
+        p2 = (img_width, y2)
+        _draw(p1=p1, p2=p2, img=img)
+        drawn.append(Line(p1, p2))
 
     cv2.imshow("Result", img)
     cv2.waitKey(0)
     return drawn
 
 
+def _remove_close_lines(lines, img_height):
+    previous_y1 = img_height
+    lines_not_close = []
+    for x1, y1, x2, y2 in lines:
+        if (previous_y1 - y1) >= MIN_LINE_GAP:
+            lines_not_close.append([x1, y1, x2, y2])
+            previous_y1 = y1
+    return lines_not_close
+
+
+def _remove_skew_lines(lines, delta_pixel):
+    lines_straight = []
+    # TODO: Simplify, maybe use list comprehension
+    for x in range(0, len(lines)):
+        for x1, y1, x2, y2 in lines[x]:
+            if abs(y1 - y2) < delta_pixel:
+                lines_straight.append([x1, y1, x2, y2])
+    return lines_straight
+
+
 class Pathfinder:
     def __init__(self, img):
         self.obstacles = []
         self.img = img
+        self.img_height = img.shape[0]
         self.img_width = img.shape[1]
         self.stair = Stair()
         self.pixel_per_mm = (self.img_width - HOUGH_LINES_OFFSET) / STAIR_WIDTH_MILLIMETER
@@ -85,15 +86,19 @@ class Pathfinder:
         gauss = cv2.GaussianBlur(self.img, (5, 5), 0, 0)
         gray = cv2.cvtColor(gauss, cv2.COLOR_BGR2GRAY)
         canny = cv2.Canny(gray, 80, 240, 3)
+        print(self.img.shape)
         lines = cv2.HoughLinesP(
             canny,
             rho=1,
             theta=1 * np.pi / 180,
-            threshold=140,
-            minLineLength=90,
+            threshold=20,
+            minLineLength=self.img_width / 2,
             maxLineGap=90
         )
-        return _draw_lines(lines, self.img, self.img_width)
+        lines = _remove_skew_lines(lines, 10)
+        lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
+        lines = _remove_close_lines(lines, self.img_height)
+        return _draw_lines(lines, self.img)
 
     # maybe deprecated
     def convert_to_matrice(self, stair):
@@ -120,12 +125,13 @@ class Pathfinder:
             return
         stair = Stair()
         lines = self.find_hough_lines()
-        lines.sort(key=attrgetter('p1y'), reverse=True)
+        if lines:
+            lines.sort(key=attrgetter('p1y'), reverse=True)
 
-        for line in lines:
-            obs = [o for o in obstacles if
-                   line.p1y - HOUGH_LINES_OFFSET <= o.bottom_center[1] <= line.p1y + HOUGH_LINES_OFFSET]
-            stair.add_row(obs)
+            for line in lines:
+                obs = [o for o in obstacles if
+                       line.p1y - HOUGH_LINES_OFFSET <= o.bottom_center[1] <= line.p1y + HOUGH_LINES_OFFSET]
+                stair.add_row(obs)
         return stair
 
     def create_stair_passable_areas(self, stair_objects):
