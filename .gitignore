@@ -3,3 +3,4 @@
 *.iml
 /images/*
 */__pycache__/
+/images/
