@@ -17,13 +17,13 @@ HOUGH_LINES_OFFSET = 20
 ROBOCUBE_WIDTH_MILLIMETER = 250
 STAIR_WIDTH_MILLIMETER = 2000
 MATRICE_CELL_SIZE_MILLIMETER = 10
-MIN_LINE_GAP = 60
+MIN_LINE_GAP = 70
 
 
-def _draw(p1, p2, img):
+def _draw_line(p1, p2, img, color):
     if img is None:
         return
-    cv2.line(img, p1, p2, (255, 0, 0), 2)
+    cv2.line(img, p1, p2, color, 2)
 
 
 def _draw_lines(lines, img):
@@ -32,12 +32,17 @@ def _draw_lines(lines, img):
     for x1, y1, x2, y2 in lines:
         p1 = (0, y1)
         p2 = (img_width, y2)
-        _draw(p1=p1, p2=p2, img=img)
+        _draw_line(p1=p1, p2=p2, img=img, color=(255, 0, 0))
         drawn.append(Line(p1, p2))
-
-    cv2.imshow("Result", img)
-    cv2.waitKey(0)
     return drawn
+
+
+def _draw_obstacles(obstacles, img):
+    for o in obstacles:
+        _draw_line(o.top_left, o.top_right, img=img, color=(0, 255, 0))
+        _draw_line(o.top_left, o.bottom_left, img=img, color=(0, 255, 0))
+        _draw_line(o.bottom_left, o.bottom_right, img=img, color=(0, 255, 0))
+        _draw_line(o.bottom_right, o.top_right, img=img, color=(0, 255, 0))
 
 
 def _remove_close_lines(lines, img_height):
@@ -91,9 +96,9 @@ class Pathfinder:
             canny,
             rho=1,
             theta=1 * np.pi / 180,
-            threshold=20,
+            threshold=30,
             minLineLength=self.img_width / 2,
-            maxLineGap=90
+            maxLineGap=200
         )
         lines = _remove_skew_lines(lines, 10)
         lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
@@ -125,9 +130,11 @@ class Pathfinder:
             return
         stair = Stair()
         lines = self.find_hough_lines()
-        if lines:
-            lines.sort(key=attrgetter('p1y'), reverse=True)
+        _draw_obstacles(obstacles, self.img)
+        cv2.imshow("Result", self.img)
+        cv2.waitKey(0)
 
+        if lines:
             for line in lines:
                 obs = [o for o in obstacles if
                        line.p1y - HOUGH_LINES_OFFSET <= o.bottom_center[1] <= line.p1y + HOUGH_LINES_OFFSET]
