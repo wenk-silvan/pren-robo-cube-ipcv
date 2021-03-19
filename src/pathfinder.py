@@ -8,23 +8,18 @@ from operator import attrgetter
 from path import Path
 from direction import Direction
 
-PINK = (255, 0, 255)
-FONT_COLOR = (255, 0, 0)
-PIVOT_WIDTH_MM = 160
-OBJECT_TEXT = "Ziegel"
-STAIR_WIDTH_OFFSET = 20
 HOUGH_LINES_OFFSET = 50
 ROBOCUBE_WIDTH_MILLIMETER = 250
 STAIR_WIDTH_MILLIMETER = 2000
 MATRICE_CELL_SIZE_MILLIMETER = 10
-MIN_LINE_GAP = 70
+MIN_LINE_GAP = 85
 
 
-def _canny_parameters_adjustment(gray):
+def _canny_parameters_adjustment(gray, thresh1, thresh2):
     """TRACKBAR TO ADJUST HOUGHLINESP PARAMETERS"""
     cv2.namedWindow("Canny")
-    cv2.createTrackbar("Thresh 1", "Canny", 44, 255, _pass)
-    cv2.createTrackbar("Thresh 2", "Canny", 138, 255, _pass)
+    cv2.createTrackbar("Thresh 1", "Canny", thresh1, 255, _pass)
+    cv2.createTrackbar("Thresh 2", "Canny", thresh2, 255, _pass)
 
     while 1:
         t1 = cv2.getTrackbarPos("Thresh 1", "Canny")
@@ -61,13 +56,14 @@ def _draw_obstacles(obstacles, img):
         _draw_line(o.bottom_right, o.top_right, img=img, color=(0, 255, 0))
 
 
-def _hough_lines_parameters_adjustment(img_width, img_height, canny, image):
+def _hough_lines_parameters_adjustment(img_width, img_height, canny, image, max_line_skewness,
+                                       rho, thresh, min_line_length, max_line_gap):
     """TRACKBAR TO ADJUST HOUGHLINESP PARAMETERS"""
     cv2.namedWindow("Hough")
-    cv2.createTrackbar("Rho", "Hough", 1, 255, _pass)
-    cv2.createTrackbar("Thresh", "Hough", 50, 255, _pass)
-    cv2.createTrackbar("MinLineLength", "Hough", 138, img_width, _pass)
-    cv2.createTrackbar("MaxLineGap", "Hough", 200, img_height, _pass)
+    cv2.createTrackbar("Rho", "Hough", rho, 255, _pass)
+    cv2.createTrackbar("Thresh", "Hough", thresh, 255, _pass)
+    cv2.createTrackbar("MinLineLength", "Hough", min_line_length, img_width, _pass)
+    cv2.createTrackbar("MaxLineGap", "Hough", max_line_gap, img_height, _pass)
 
     while 1:
         img = image.copy()
@@ -80,7 +76,7 @@ def _hough_lines_parameters_adjustment(img_width, img_height, canny, image):
             maxLineGap=cv2.getTrackbarPos("MaxLineGap", "Hough")
         )
 
-        lines = _remove_skew_lines(lines, 10)
+        lines = _remove_skew_lines(lines, max_line_skewness)
         lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
         lines = _remove_close_lines(lines, img_height)
         lines = _draw_lines(lines, img)
@@ -95,7 +91,7 @@ def _pass(_):
 
 
 def _remove_close_lines(lines, img_height):
-    previous_y1 = img_height
+    previous_y1 = img_height + 50
     lines_not_close = []
     for x1, y1, x2, y2 in lines:
         if (previous_y1 - y1) >= MIN_LINE_GAP:
@@ -115,7 +111,8 @@ def _remove_skew_lines(lines, delta_pixel):
 
 
 class Pathfinder:
-    def __init__(self, img):
+    def __init__(self, img, configuration):
+        self.conf = configuration
         self.obstacles = []
         self.img = img
         self.img_height = img.shape[0]
@@ -124,10 +121,16 @@ class Pathfinder:
         self.pixel_per_mm = (self.img_width - HOUGH_LINES_OFFSET) / STAIR_WIDTH_MILLIMETER
         self.robocube_width = int(self.pixel_per_mm * ROBOCUBE_WIDTH_MILLIMETER)
         self.matrice_cell_size = self.pixel_per_mm * MATRICE_CELL_SIZE_MILLIMETER
-        self.stair_end_right = self.img_width - STAIR_WIDTH_OFFSET
-        self.stair_end_left = STAIR_WIDTH_OFFSET
 
-    def find_obstacles(self, cascade, min_area, scale_val, neighbours):
+        offset = int(self.conf["staircase_width_offset"])
+        self.stair_end_right = self.img_width - offset
+        self.stair_end_left = offset
+
+    def find_obstacles(self, cascade):
+        scale_val = float(self.conf["obstacles_scale_val"])
+        neighbours = int(self.conf["obstacles_neighbors"])
+        min_area = int(self.conf["obstacles_min_area"])
+
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
         obstacles = cascade.detectMultiScale(gray, scale_val, neighbours)
         for (x, y, w, h) in obstacles:
@@ -139,17 +142,18 @@ class Pathfinder:
     def find_hough_lines(self):
         gauss = cv2.GaussianBlur(self.img, (5, 5), 0, 0)
         gray = cv2.cvtColor(gauss, cv2.COLOR_BGR2GRAY)
-        canny = cv2.Canny(gray, 44, 138, 3)
+        canny = cv2.Canny(gray, int(self.conf["staircase_canny_thresh1"]), int(self.conf["staircase_canny_thresh2"]), 3)
+
         lines = cv2.HoughLinesP(
             canny,
-            rho=3,
+            rho=int(self.conf["staircase_lines_rho"]),
             theta=1 * np.pi / 180,
-            threshold=127,
-            minLineLength=(3/4) * self.img_width,
+            threshold=int(self.conf["staircase_lines_thresh"]),
+            minLineLength=int(self.conf["staircase_lines_min_line_length"]),
             maxLineGap=self.img_height
         )
 
-        lines = _remove_skew_lines(lines, 10)
+        lines = _remove_skew_lines(lines, int(self.conf["staircase_max_skewness"]))
         lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
         lines = _remove_close_lines(lines, self.img_height)
         return _draw_lines(lines, self.img)
@@ -187,7 +191,7 @@ class Pathfinder:
             for line in lines:
                 obs = [o for o in obstacles if
                        line.p1y - HOUGH_LINES_OFFSET <= o.bottom_center[1] <= line.p1y + HOUGH_LINES_OFFSET]
-                obs.sort(key=lambda l: l.bottom_left[0], reverse=False) # sort obstacles from left to right
+                obs.sort(key=lambda l: l.bottom_left[0], reverse=False)  # sort obstacles from left to right
                 stair.add_row(obs)
         return stair
 
@@ -227,7 +231,7 @@ class Pathfinder:
 
         # If no obstacles, add whole row
         if count == 0:
-            areas.append((STAIR_WIDTH_OFFSET, self.stair_end_right))
+            areas.append((int(self.conf["staircase_width_offset"]), self.stair_end_right))
             return areas
 
         # if one obstacle

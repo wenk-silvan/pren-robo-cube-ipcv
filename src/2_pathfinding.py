@@ -1,18 +1,18 @@
 import cv2
 from pathfinder import Pathfinder
 from image_manipulator import ImageManipulator
+from configparser import ConfigParser
 
-################################################################
-CASCADE_PATH = "../cascades/obstacle.xml"
-IMG_PATH = "../images/stair/04/img001.jpg"
-#################################################################
+config_object = ConfigParser()
+config_object.read("../config.ini")
+conf = config_object["CONFIGURATION"]
 
-img_raw = cv2.imread(IMG_PATH)
+img_raw = cv2.imread(conf["img_path"])
 image_manipulator = ImageManipulator(img_raw)
 img = image_manipulator.transform_to_2d()
-cascade = cv2.CascadeClassifier(CASCADE_PATH)
-finder = Pathfinder(img)
-obstacles = finder.find_obstacles(cascade, min_area=400, scale_val=1.1, neighbours=3)
+cascade = cv2.CascadeClassifier(conf["cascade_path"])
+finder = Pathfinder(img, conf)
+obstacles = finder.find_obstacles(cascade)
 stair_with_objects = finder.create_stair_with_objects(obstacles)
 stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
 # matrice = finder.convert_to_matrice(stair_with_areas)
