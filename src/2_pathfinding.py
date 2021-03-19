@@ -4,7 +4,7 @@ from image_manipulator import ImageManipulator
 
 ################################################################
 CASCADE_PATH = "../cascades/obstacle.xml"
-IMG_PATH = "../images/stair/03/img001.jpg"
+IMG_PATH = "../images/stair/04/img001.jpg"
 #################################################################
 
 img_raw = cv2.imread(IMG_PATH)
