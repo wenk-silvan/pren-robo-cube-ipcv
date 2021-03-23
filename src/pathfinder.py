@@ -4,7 +4,6 @@ import itertools
 from line import Line
 from stair import Stair
 from obstacle import Obstacle
-from operator import attrgetter
 from path import Path
 from direction import Direction
 
@@ -13,101 +12,6 @@ ROBOCUBE_WIDTH_MILLIMETER = 250
 STAIR_WIDTH_MILLIMETER = 2000
 MATRICE_CELL_SIZE_MILLIMETER = 10
 MIN_LINE_GAP = 85
-
-
-def _canny_parameters_adjustment(gray, thresh1, thresh2):
-    """TRACKBAR TO ADJUST HOUGHLINESP PARAMETERS"""
-    cv2.namedWindow("Canny")
-    cv2.createTrackbar("Thresh 1", "Canny", thresh1, 255, _pass)
-    cv2.createTrackbar("Thresh 2", "Canny", thresh2, 255, _pass)
-
-    while 1:
-        t1 = cv2.getTrackbarPos("Thresh 1", "Canny")
-        t2 = cv2.getTrackbarPos("Thresh 2", "Canny")
-        canny = cv2.Canny(image=gray, threshold1=t1, threshold2=t2, apertureSize=3)
-        cv2.imshow("Canny", canny)
-        k = cv2.waitKey(1) & 0xFF
-        if k == 27: # ESC
-            break
-
-
-def _draw_line(p1, p2, img, color):
-    if img is None:
-        return
-    cv2.line(img, p1, p2, color, 2)
-
-
-def _draw_lines(lines, img):
-    drawn = []
-    img_height, img_width, _ = img.shape
-    for x1, y1, x2, y2 in lines:
-        p1 = (x1, y1)
-        p2 = (x2, y2)
-        _draw_line(p1=p1, p2=p2, img=img, color=(255, 0, 0))
-        drawn.append(Line(p1, p2))
-    return drawn
-
-
-def _draw_obstacles(obstacles, img):
-    for o in obstacles:
-        _draw_line(o.top_left, o.top_right, img=img, color=(0, 255, 0))
-        _draw_line(o.top_left, o.bottom_left, img=img, color=(0, 255, 0))
-        _draw_line(o.bottom_left, o.bottom_right, img=img, color=(0, 255, 0))
-        _draw_line(o.bottom_right, o.top_right, img=img, color=(0, 255, 0))
-
-
-def _hough_lines_parameters_adjustment(img_width, img_height, canny, image, max_line_skewness,
-                                       rho, thresh, min_line_length, max_line_gap):
-    """TRACKBAR TO ADJUST HOUGHLINESP PARAMETERS"""
-    cv2.namedWindow("Hough")
-    cv2.createTrackbar("Rho", "Hough", rho, 255, _pass)
-    cv2.createTrackbar("Thresh", "Hough", thresh, 255, _pass)
-    cv2.createTrackbar("MinLineLength", "Hough", min_line_length, img_width, _pass)
-    cv2.createTrackbar("MaxLineGap", "Hough", max_line_gap, img_height, _pass)
-
-    while 1:
-        img = image.copy()
-        lines = cv2.HoughLinesP(
-            canny,
-            rho=cv2.getTrackbarPos("Rho", "Hough"),
-            theta=1 * np.pi / 180,
-            threshold=cv2.getTrackbarPos("Thresh", "Hough"),
-            minLineLength=cv2.getTrackbarPos("MinLineLength", "Hough"),
-            maxLineGap=cv2.getTrackbarPos("MaxLineGap", "Hough")
-        )
-
-        lines = _remove_skew_lines(lines, max_line_skewness)
-        lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
-        lines = _remove_close_lines(lines, img_height)
-        lines = _draw_lines(lines, img)
-        cv2.imshow("Hough", img)
-        k = cv2.waitKey(1) & 0xFF
-        if k == 27:  # ESC
-            break
-
-
-def _pass(_):
-    pass
-
-
-def _remove_close_lines(lines, img_height):
-    previous_y1 = img_height + 50
-    lines_not_close = []
-    for x1, y1, x2, y2 in lines:
-        if (previous_y1 - y1) >= MIN_LINE_GAP:
-            lines_not_close.append([x1, y1, x2, y2])
-            previous_y1 = y1
-    return lines_not_close
-
-
-def _remove_skew_lines(lines, delta_pixel):
-    lines_straight = []
-    # TODO: Simplify, maybe use list comprehension
-    for x in range(0, len(lines)):
-        for x1, y1, x2, y2 in lines[x]:
-            if abs(y1 - y2) < delta_pixel:
-                lines_straight.append([x1, y1, x2, y2])
-    return lines_straight
 
 
 class Pathfinder:
@@ -153,12 +57,11 @@ class Pathfinder:
             maxLineGap=self.img_height
         )
 
-        lines = _remove_skew_lines(lines, int(self.conf["staircase_max_skewness"]))
+        lines = Pathfinder.remove_skew_lines(lines, int(self.conf["staircase_max_skewness"]))
         lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
-        lines = _remove_close_lines(lines, self.img_height)
-        return _draw_lines(lines, self.img)
+        lines = Pathfinder.remove_close_lines(lines, self.img_height)
+        return Pathfinder.draw_lines(lines, self.img)
 
-    # maybe deprecated
     def convert_to_matrice(self, stair):
         if not isinstance(stair, Stair):
             print("Err: The provided object is not of type Stair.")
@@ -183,7 +86,7 @@ class Pathfinder:
             return
         stair = Stair()
         lines = self.find_hough_lines()
-        _draw_obstacles(obstacles, self.img)
+        Pathfinder.draw_obstacles(obstacles, self.img)
         cv2.imshow("Result", self.img)
         cv2.waitKey(0)
 
@@ -202,13 +105,13 @@ class Pathfinder:
         stair_areas = Stair()
         for i in range(stair_objects.count()):
             row = stair_objects.get(i)
-            areas = self._get_x_coords_possible_areas(row)
+            areas = self.__get_x_coords_possible_areas(row)
             stair_areas.add_row(areas)
         return stair_areas
 
     def calculate_path(self, stair_areas):
         path = Path()
-        possible_positions = self._calculate_path_sequential(stair_areas)
+        possible_positions = self.__calculate_path_sequential(stair_areas)
         if len(possible_positions) == 0:
             print("Err: No passable path found.")
             return
@@ -224,7 +127,7 @@ class Pathfinder:
             current_pos = pos
         return path
 
-    def _get_x_coords_possible_areas(self, obstacles_sorted_left_to_right):
+    def __get_x_coords_possible_areas(self, obstacles_sorted_left_to_right):
         # TODO: Improve hardcoded count of obstacles per row
         areas = []  # tuples with left and right x coordinate
         count = len(obstacles_sorted_left_to_right)
@@ -286,7 +189,7 @@ class Pathfinder:
                 areas.append((obstacle3.bottom_right[0], self.stair_end_right))
             return areas
 
-    def _calculate_path_sequential(self, stair):
+    def __calculate_path_sequential(self, stair):
         if not isinstance(stair, Stair):
             print("Err: The provided object is not of type Stair.")
             return
@@ -316,3 +219,98 @@ class Pathfinder:
                 possible_positions.append(positions)
         print(possible_positions)
         return possible_positions
+
+    @staticmethod
+    def canny_parameters_adjustment(gray, thresh1, thresh2):
+        """TRACKBAR TO ADJUST HOUGHLINESP PARAMETERS"""
+        cv2.namedWindow("Canny")
+        cv2.createTrackbar("Thresh 1", "Canny", thresh1, 255, Pathfinder._pass)
+        cv2.createTrackbar("Thresh 2", "Canny", thresh2, 255, Pathfinder._pass)
+
+        while 1:
+            t1 = cv2.getTrackbarPos("Thresh 1", "Canny")
+            t2 = cv2.getTrackbarPos("Thresh 2", "Canny")
+            canny = cv2.Canny(image=gray, threshold1=t1, threshold2=t2, apertureSize=3)
+            cv2.imshow("Canny", canny)
+            k = cv2.waitKey(1) & 0xFF
+            if k == 27: # ESC
+                break
+
+    @staticmethod
+    def draw_line(p1, p2, img, color):
+        if img is None:
+            return
+        cv2.line(img, p1, p2, color, 2)
+
+    @staticmethod
+    def draw_lines(lines, img):
+        drawn = []
+        img_height, img_width, _ = img.shape
+        for x1, y1, x2, y2 in lines:
+            p1 = (x1, y1)
+            p2 = (x2, y2)
+            Pathfinder.draw_line(p1=p1, p2=p2, img=img, color=(255, 0, 0))
+            drawn.append(Line(p1, p2))
+        return drawn
+
+    @staticmethod
+    def draw_obstacles(obstacles, img):
+        for o in obstacles:
+            Pathfinder.draw_line(o.top_left, o.top_right, img=img, color=(0, 255, 0))
+            Pathfinder.draw_line(o.top_left, o.bottom_left, img=img, color=(0, 255, 0))
+            Pathfinder.draw_line(o.bottom_left, o.bottom_right, img=img, color=(0, 255, 0))
+            Pathfinder.draw_line(o.bottom_right, o.top_right, img=img, color=(0, 255, 0))
+
+    @staticmethod
+    def hough_lines_parameters_adjustment(img_width, img_height, canny, image, max_line_skewness,
+                                          rho, thresh, min_line_length, max_line_gap):
+        """TRACKBAR TO ADJUST HOUGHLINESP PARAMETERS"""
+        cv2.namedWindow("Hough")
+        cv2.createTrackbar("Rho", "Hough", rho, 255, Pathfinder._pass)
+        cv2.createTrackbar("Thresh", "Hough", thresh, 255, Pathfinder._pass)
+        cv2.createTrackbar("MinLineLength", "Hough", min_line_length, img_width, Pathfinder._pass)
+        cv2.createTrackbar("MaxLineGap", "Hough", max_line_gap, img_height, Pathfinder._pass)
+
+        while 1:
+            img = image.copy()
+            lines = cv2.HoughLinesP(
+                canny,
+                rho=cv2.getTrackbarPos("Rho", "Hough"),
+                theta=1 * np.pi / 180,
+                threshold=cv2.getTrackbarPos("Thresh", "Hough"),
+                minLineLength=cv2.getTrackbarPos("MinLineLength", "Hough"),
+                maxLineGap=cv2.getTrackbarPos("MaxLineGap", "Hough")
+            )
+
+            lines = Pathfinder.remove_skew_lines(lines, max_line_skewness)
+            lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
+            lines = Pathfinder.remove_close_lines(lines, img_height)
+            lines = Pathfinder.draw_lines(lines, img)
+            cv2.imshow("Hough", img)
+            k = cv2.waitKey(1) & 0xFF
+            if k == 27:  # ESC
+                break
+
+    @staticmethod
+    def _pass(_):
+        pass
+
+    @staticmethod
+    def remove_close_lines(lines, img_height):
+        previous_y1 = img_height + 50
+        lines_not_close = []
+        for x1, y1, x2, y2 in lines:
+            if (previous_y1 - y1) >= MIN_LINE_GAP:
+                lines_not_close.append([x1, y1, x2, y2])
+                previous_y1 = y1
+        return lines_not_close
+
+    @staticmethod
+    def remove_skew_lines(lines, delta_pixel):
+        lines_straight = []
+        # TODO: Simplify with list comprehension
+        for x in range(0, len(lines)):
+            for x1, y1, x2, y2 in lines[x]:
+                if abs(y1 - y2) < delta_pixel:
+                    lines_straight.append([x1, y1, x2, y2])
+        return lines_straight

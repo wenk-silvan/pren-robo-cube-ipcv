@@ -57,15 +57,3 @@ class ImageManipulator:
         bottom_left = (0, self.image.shape[0])
         bottom_right = (self.image.shape[1], self.image.shape[0])
         return top_left, top_right, bottom_left, bottom_right
-
-
-# plt.subplot(1, 2, 1),
-# plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-# plt.title('Original Image')
-#
-# plt.subplot(1, 2, 2),
-# plt.imshow(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
-# plt.title('Result')
-#
-# plt.show()
-# cv2.waitKey(0)
