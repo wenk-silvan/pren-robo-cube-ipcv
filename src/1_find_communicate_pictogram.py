@@ -38,6 +38,7 @@ def main():
     for c in paths:
         cascades.append(cv2.CascadeClassifier(CASCADE_PATH + c))
 
+    # TODO: Use alternative to "while True"
     while True:
         counter = 0
         stats = {'hammer': 0, 'sandwich': 0, 'rule': 0, 'paint': 0, 'pencil': 0}
