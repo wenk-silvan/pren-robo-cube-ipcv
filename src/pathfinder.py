@@ -26,12 +26,13 @@ class Pathfinder:
     def find_obstacles(self, cascade):
         scale_val = float(self.conf["obstacles_scale_val"])
         neighbours = int(self.conf["obstacles_neighbors"])
-        min_area = int(self.conf["obstacles_min_area"])
+        min_height = int(self.conf["obstacles_min_height"])
+        min_width = int(self.conf["obstacles_min_width"])
 
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
         obstacles = cascade.detectMultiScale(gray, scale_val, neighbours)
         for (x, y, w, h) in obstacles:
-            if w * h < min_area:
+            if w < min_width or h < min_height:
                 continue
             self.obstacles.append(Obstacle(x, y, w, h))
         return self.obstacles
