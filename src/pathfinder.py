@@ -86,10 +86,11 @@ class Pathfinder:
         cv2.imshow("Result", self.img)
         cv2.waitKey(0)
 
+        distance_to_step = int(self.conf["obstacles_distance_to_step"])
         if lines:
             for line in lines:
                 obs = [o for o in obstacles if
-                       line.p1y - self.stair_width_offset <= o.bottom_center[1] <= line.p1y + self.stair_width_offset]
+                       line.p1y - distance_to_step <= o.bottom_center[1] <= line.p1y + distance_to_step]
                 obs.sort(key=lambda l: l.bottom_left[0], reverse=False)  # sort obstacles from left to right
                 stair.add_row(obs)
         return stair
