@@ -7,12 +7,6 @@ from obstacle import Obstacle
 from path import Path
 from direction import Direction
 
-HOUGH_LINES_OFFSET = 50
-ROBOCUBE_WIDTH_MILLIMETER = 250
-STAIR_WIDTH_MILLIMETER = 2000
-MATRICE_CELL_SIZE_MILLIMETER = 10
-MIN_LINE_GAP = 85
-
 
 class Pathfinder:
     def __init__(self, img, configuration):
@@ -22,13 +16,12 @@ class Pathfinder:
         self.img_height = img.shape[0]
         self.img_width = img.shape[1]
         self.stair = Stair()
-        self.pixel_per_mm = (self.img_width - HOUGH_LINES_OFFSET) / STAIR_WIDTH_MILLIMETER
-        self.robocube_width = int(self.pixel_per_mm * ROBOCUBE_WIDTH_MILLIMETER)
-        self.matrice_cell_size = self.pixel_per_mm * MATRICE_CELL_SIZE_MILLIMETER
-
-        offset = int(self.conf["staircase_width_offset"])
-        self.stair_end_right = self.img_width - offset
-        self.stair_end_left = offset
+        self.stair_min_line_gap = int(self.conf["staircase_min_line_gap"])
+        self.stair_width_offset = int(self.conf["staircase_width_offset"])
+        self.stair_end_right = self.img_width - self.stair_width_offset
+        self.stair_end_left = self.stair_width_offset
+        self.pixel_per_mm = (self.img_width - self.stair_width_offset) / int(self.conf["staircase_width_millimeter"])
+        self.robocube_width = int(self.pixel_per_mm * int(self.conf["robot_width_millimeter"]))
 
     def find_obstacles(self, cascade):
         scale_val = float(self.conf["obstacles_scale_val"])
@@ -59,13 +52,16 @@ class Pathfinder:
 
         lines = Pathfinder.remove_skew_lines(lines, int(self.conf["staircase_max_skewness"]))
         lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
-        lines = Pathfinder.remove_close_lines(lines, self.img_height)
+        lines = Pathfinder.remove_close_lines(lines, self.img_height, self.stair_min_line_gap)
         return Pathfinder.draw_lines(lines, self.img)
 
     def convert_to_matrice(self, stair):
         if not isinstance(stair, Stair):
             print("Err: The provided object is not of type Stair.")
             return
+
+        matrice_cell_size_millimeter = 10
+        matrice_cell_size = self.pixel_per_mm * matrice_cell_size_millimeter
         matrice = []
         for i in range(stair.count()):
             cells = []
@@ -76,7 +72,7 @@ class Pathfinder:
                     cells.append(1)
                 else:
                     cells.append(0)
-                cursor += self.matrice_cell_size
+                cursor += matrice_cell_size
             matrice.append(cells)
         return matrice
 
@@ -93,7 +89,7 @@ class Pathfinder:
         if lines:
             for line in lines:
                 obs = [o for o in obstacles if
-                       line.p1y - HOUGH_LINES_OFFSET <= o.bottom_center[1] <= line.p1y + HOUGH_LINES_OFFSET]
+                       line.p1y - self.stair_width_offset <= o.bottom_center[1] <= line.p1y + self.stair_width_offset]
                 obs.sort(key=lambda l: l.bottom_left[0], reverse=False)  # sort obstacles from left to right
                 stair.add_row(obs)
         return stair
@@ -134,7 +130,7 @@ class Pathfinder:
 
         # If no obstacles, add whole row
         if count == 0:
-            areas.append((int(self.conf["staircase_width_offset"]), self.stair_end_right))
+            areas.append((self.stair_end_left, self.stair_end_right))
             return areas
 
         # if one obstacle
@@ -296,11 +292,11 @@ class Pathfinder:
         pass
 
     @staticmethod
-    def remove_close_lines(lines, img_height):
+    def remove_close_lines(lines, img_height, min_line_gap):
         previous_y1 = img_height + 50
         lines_not_close = []
         for x1, y1, x2, y2 in lines:
-            if (previous_y1 - y1) >= MIN_LINE_GAP:
+            if (previous_y1 - y1) >= min_line_gap:
                 lines_not_close.append([x1, y1, x2, y2])
                 previous_y1 = y1
         return lines_not_close
