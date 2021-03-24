@@ -247,6 +247,8 @@ class Pathfinder:
         for x1, y1, x2, y2 in lines:
             p1 = (x1, y1)
             p2 = (x2, y2)
+            if not p1 or not p2:
+                continue
             Pathfinder.draw_line(p1=p1, p2=p2, img=img, color=(255, 0, 0))
             drawn.append(Line(p1, p2))
         return drawn

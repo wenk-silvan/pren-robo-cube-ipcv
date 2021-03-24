@@ -14,8 +14,10 @@ def main():
     drive = Drive()
     stair_detection = StairDetection(conf)
 
-    while not stair_detection.is_centered():
+    while not stair_detection.detect_stair():
+        # TODO: Wait for robot to have turned
         drive.rotate_left(int(conf["drive_rotation_angle"]))
 
 
 main()
+exit(0)
