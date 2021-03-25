@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 # TODO Move config-elements to config.ini
 ################################################################
-directory = pathlib.Path().absolute()
+directory = pathlib.Path().absolute().parent / "resources" / "cascades" / "pictogram"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
 objectCount = 21      # how many objects to cont for recognition
@@ -28,7 +28,7 @@ class PictogramDetector:
         # LOAD THE CLASSIFIERS
         self.cascades = []
         for c in paths:
-            self.cascades.append(cv2.CascadeClassifier(str(directory) + "../resources/cascades/pictogram/" + c))
+            self.cascades.append(cv2.CascadeClassifier(directory / + c))
 
         logging.info("Ready for detection")
 
