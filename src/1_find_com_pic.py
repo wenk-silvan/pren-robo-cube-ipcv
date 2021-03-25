@@ -28,7 +28,7 @@ class PictogramDetector:
         # LOAD THE CLASSIFIERS
         self.cascades = []
         for c in paths:
-            self.cascades.append(cv2.CascadeClassifier(str(directory) + "/cascades/pictogram/" + c))
+            self.cascades.append(cv2.CascadeClassifier(str(directory) + "../resources/cascades/pictogram/" + c))
 
         logging.info("Ready for detection")
 
