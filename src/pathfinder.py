@@ -119,9 +119,9 @@ class Pathfinder:
         for pos in possible_positions[0]:
             distance_millimeter = abs(current_pos - pos) / self.pixel_per_mm
             if pos < current_pos:
-                path.add_instruction(Direction.LEFT, distance_millimeter)
+                path.add_instruction(Direction.DRIVE_LEFT, distance_millimeter)
             else:
-                path.add_instruction(Direction.RIGHT, distance_millimeter)
+                path.add_instruction(Direction.DRIVE_RIGHT, distance_millimeter)
             current_pos = pos
         return path
 
