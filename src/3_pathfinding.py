@@ -1,6 +1,6 @@
 import cv2
-from pathfinder import Pathfinder
-from image_manipulator import ImageManipulator
+from src.stair.pathfinding.pathfinder import Pathfinder
+from src.camera.image_manipulator import ImageManipulator
 from configparser import ConfigParser
 
 

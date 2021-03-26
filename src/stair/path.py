@@ -1,5 +1,4 @@
-from instruction import Instruction
-from src.direction import Direction
+from src.stair.pathfinding.instruction import Instruction
 
 
 class Path:

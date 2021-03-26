@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
 import logging
-from line import Line
-from camera import Camera
-from pathfinder import Pathfinder
-from direction import Direction
+from src.stair.line import Line
+from src.camera.camera import Camera
+from src.stair.pathfinding.pathfinder import Pathfinder
+from src.movement.direction import Direction
 
 
 class StairDetection:

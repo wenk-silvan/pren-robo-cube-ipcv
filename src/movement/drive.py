@@ -1,5 +1,5 @@
 import logging
-from direction import Direction
+from src.movement.direction import Direction
 
 class Drive:
     def __init__(self, conf, conn):

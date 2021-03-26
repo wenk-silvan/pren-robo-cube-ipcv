@@ -1,11 +1,11 @@
 import numpy as np
 import cv2
 import itertools
-from line import Line
-from stair import Stair
-from obstacle import Obstacle
-from path import Path
-from direction import Direction
+from src.stair.line import Line
+from src.stair.stair import Stair
+from src.stair.obstacle import Obstacle
+from src.stair.path import Path
+from src.movement.direction import Direction
 
 
 class Pathfinder:

@@ -1,9 +1,9 @@
 import time, cv2
-from drive import Drive
-from stair_detection import StairDetection
+from src.movement.drive import Drive
+from src.stair.stair_detection import StairDetection
 from configparser import ConfigParser
-from camera import Camera
-from direction import Direction
+from src.camera.camera import Camera
+from src.movement.direction import Direction
 
 
 def get_configuration(path):
