@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 # TODO Move config-elements to config.ini
 ################################################################
-path_to_cascades = "../resources/cascades/pictogram/"
+path_to_cascades = "../../resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
 objectCount = 21      # how many objects to cont for recognition

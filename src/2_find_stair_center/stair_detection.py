@@ -14,21 +14,46 @@ class StairDetection:
         self.first_step = None
         pass
 
-    def detect_stair(self):
-        # image = self.camera.snapshot()
-        image = cv2.imread(self.conf["img_path"])
-        line = self.detect_yellow_line(image)
-        is_center = StairDetection.is_centered(line, image, int(self.conf["staircase_yellow_width_offset"]))
-        return is_center
+    def detect_steps(self, image):
+        gauss = cv2.GaussianBlur(image, (5, 5), 0, 0)
+        gray = cv2.cvtColor(gauss, cv2.COLOR_BGR2GRAY)
+        # hsv_lower_range = (33, 0, 80)
+        # hsv_upper_range = (108, 140, 209)
+        # thresh = cv2.inRange(hsv, hsv_lower_range, hsv_upper_range)
+        canny = cv2.Canny(gray, int(self.conf["staircase_canny_thresh1"]), int(self.conf["staircase_canny_thresh2"]), 3)
+
+        lines = cv2.HoughLinesP(
+            canny,
+            rho=int(self.conf["staircase_lines_rho"]),
+            theta=1 * np.pi / 180,
+            threshold=int(self.conf["staircase_lines_thresh"]),
+            minLineLength=int(self.conf["staircase_lines_min_line_length"]),
+            maxLineGap=image.shape[1]
+        )
+
+        lines = Pathfinder.remove_skew_lines(lines, 200)
+        lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
+        # lines = Pathfinder.remove_close_lines(lines, image.shape[1], int(self.conf["staircase_min_line_gap"]))
+        Pathfinder.draw_lines(lines, image)
+
+        gray = cv2.resize(gray, (600, 400))
+        gauss = cv2.resize(gauss, (600, 400))
+        canny = cv2.resize(canny, (600, 400))
+        image = cv2.resize(image, (600, 400))
+        cv2.imshow("Gray", gray)
+        cv2.imshow("Canny", canny)
+        cv2.imshow("Gauss", gauss)
+        cv2.imshow("Result", image)
+        cv2.waitKey(0)
 
     def detect_first_step(self, image):
-        return self.detect_yellow_line(image)
+        return self.detect_steps(image)
 
     def detect_yellow_line(self, image):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        hsv_lower_range = (0, 56, 47)
-        hsv_upper_range = (100, 176, 200)
+        hsv_lower_range = (0, 50, 125)
+        hsv_upper_range = (75, 255, 255)
         thresh = cv2.inRange(hsv, hsv_lower_range, hsv_upper_range)
 
         lines = cv2.HoughLinesP(
@@ -42,8 +67,12 @@ class StairDetection:
 
         lines = Pathfinder.remove_skew_lines(lines, 200)
         # lines = Pathfinder.remove_skew_lines(lines, int(self.conf["staircase_max_skewness"]))
-        lines = StairDetection.remove_off_place_lines(lines, thresh.shape)
+        # lines = StairDetection.remove_off_place_lines(lines, thresh.shape)
+
         Pathfinder.draw_lines(lines, image)
+        thresh = cv2.resize(thresh, (600, 400))
+        image = cv2.resize(image, (600, 400))
+        cv2.imshow("Thresh", thresh)
         cv2.imshow("Result", image)
         cv2.waitKey(0)
         return StairDetection.select_widest_line(lines)
@@ -90,7 +119,7 @@ class StairDetection:
 
     @staticmethod
     def remove_off_place_lines(lines, img_shape):
-        return list(filter(lambda l: l[1] > (3 / 4) * img_shape[0], lines))  # only lines from bottom quarter of image
+        return list(filter(lambda l: l[1] > (1 / 2) * img_shape[0], lines))  # only lines from bottom half of image
 
     @staticmethod
     def select_widest_line(lines):

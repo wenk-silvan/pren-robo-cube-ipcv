@@ -11,7 +11,7 @@ def get_configuration(path):
 
 
 def main():
-    conf = get_configuration("../config.ini")
+    conf = get_configuration("../../resources/config.ini")
     img_raw = cv2.imread(conf["img_3_path"])
     image_manipulator = ImageManipulator(img_raw)
     img = image_manipulator.transform_to_2d()

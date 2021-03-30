@@ -243,7 +243,6 @@ class Pathfinder:
     @staticmethod
     def draw_lines(lines, img):
         drawn = []
-        img_height, img_width, _ = img.shape
         for x1, y1, x2, y2 in lines:
             p1 = (x1, y1)
             p2 = (x2, y2)
@@ -309,6 +308,7 @@ class Pathfinder:
     def remove_skew_lines(lines, delta_pixel):
         lines_straight = []
         # TODO: Simplify with list comprehension
+        # TODO: Use angle instead of delta in pixel
         for x in range(0, len(lines)):
             for x1, y1, x2, y2 in lines[x]:
                 if abs(y1 - y2) < delta_pixel:

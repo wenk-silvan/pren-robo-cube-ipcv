@@ -13,7 +13,7 @@ def get_configuration(path):
 
 
 def main():
-    conf = get_configuration("../config.ini")
+    conf = get_configuration("../../resources/config.ini")
     drive = Drive(conf, None)
     camera = Camera(conf)
     stair_detection = StairDetection(conf)
