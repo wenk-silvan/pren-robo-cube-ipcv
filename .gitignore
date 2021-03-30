@@ -1,6 +1,5 @@
 /.vscode/
 /.idea/
-*.iml
-/images/*
-*/__pycache__/
 /images/
+*.iml
+*.pyc

@@ -20,7 +20,7 @@ def main():
 
     while not stair_detection.is_centered():
         # image = camera.snapshot()
-        image = cv2.imread(conf["img_path"])
+        image = cv2.imread(conf["img_2_path"])
         image = cv2.resize(image, (1280, 960))
         detected = stair_detection.detect_first_step(image)
         if detected is None:
