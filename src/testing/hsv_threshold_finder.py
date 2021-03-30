@@ -81,7 +81,7 @@ cv.createTrackbar(high_S_name, window_detection_name, high_S, max_value, on_high
 cv.createTrackbar(low_V_name, window_detection_name, low_V, max_value, on_low_V_thresh_trackbar)
 cv.createTrackbar(high_V_name, window_detection_name, high_V, max_value, on_high_V_thresh_trackbar)
 
-image = cv.imread("../../images/stair/20210326_081655.jpg")
+image = cv.imread("../../images/stair/back_center/img004.jpg")
 r = 600 / image.shape[1]
 dim = (600, int(image.shape[0] * r))
 image = cv.resize(image, dim, interpolation=cv.INTER_AREA)
