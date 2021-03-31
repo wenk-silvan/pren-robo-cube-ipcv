@@ -1,32 +1,26 @@
 from __future__ import print_function
 import math
+from configparser import ConfigParser
+
 import cv2
 import numpy as np
+
+from src.b_find_stair_center.image_processing import ImageProcessing
+from src.b_find_stair_center.stair_detection import StairDetection
+from src.camera.camera import Camera
 
 
 def _pass(_):
     pass
 
 
-def draw_lines(lines, img):
+def draw_lines(lines, img, color):
     for x1, y1, x2, y2 in lines:
         p1 = (x1, y1)
         p2 = (x2, y2)
         if not p1 or not p2:
             continue
-        cv2.line(img, p1, p2, (255, 0, 0), 2)
-
-
-def detect_lines_probabilistic(canny):
-    detected = cv2.HoughLinesP(
-        canny,
-        rho=cv2.getTrackbarPos("Rho", "Hough"),
-        theta=1 * np.pi / 180,
-        threshold=cv2.getTrackbarPos("Thresh", "Hough"),
-        minLineLength=cv2.getTrackbarPos("MinLineLength", "Hough"),
-        maxLineGap=cv2.getTrackbarPos("MaxLineGap", "Hough")
-    )
-    return [[l[0][0], l[0][1], l[0][2], l[0][3]] for l in detected]
+        cv2.line(img, p1, p2, color, 2)
 
 
 def detect_lines(canny):
@@ -51,16 +45,51 @@ def detect_lines(canny):
     return lines
 
 
-def remove_skew_lines(lines, min_angle, max_angle):
-    lines_not_skew = []
+def detect_lines_probabilistic(image, rho, threshold, min_line_length, max_line_gap, canny1, canny2):
+    blurred = cv2.GaussianBlur(image, (5, 5), 0, 0)
+    gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+    canny = cv2.Canny(image=gray, threshold1=canny1, threshold2=canny2, apertureSize=3)
+    detected = cv2.HoughLinesP(
+        canny,
+        rho=rho,
+        theta=1 * np.pi / 180,
+        threshold=threshold,
+        minLineLength=min_line_length,
+        maxLineGap=max_line_gap
+    )
+    return [[l[0][0], l[0][1], l[0][2], l[0][3]] for l in detected]
+
+
+def _detect_handlebars(lines, min_angle, max_angle, min_line_gap):
+    lines = _remove_skew_lines(lines, min_angle, max_angle)
+    lines.sort(key=lambda l: l[0], reverse=False)  # sort lines by x1 from left of the image to right
+    lines = _remove_horizontally_close_lines(lines, min_line_gap)
+    return lines
+
+
+def _detect_steps(lines, img_height, min_angle, max_angle, min_line_gap):
+    lines = _remove_skew_lines(lines, min_angle, max_angle)
+    lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by x1 from left of the image to right
+    lines = _remove_vertically_close_lines(lines, img_height, min_line_gap)
+    return lines
+
+
+def _remove_skew_lines(lines, min_angle, max_angle):
+    return [[x1, y1, x2, y2] for x1, y1, x2, y2 in lines
+            if min_angle <= np.math.atan2(abs(y1 - y2), abs(x1 - x2)) * 180 / np.pi <= max_angle]
+
+
+def _remove_horizontally_close_lines(lines, min_line_gap):
+    previous_x1 = 0
+    lines_not_close = []
     for x1, y1, x2, y2 in lines:
-        angle = math.atan2(abs(y1 - y2), abs(x1 - x2)) * 180 / np.pi
-        if min_angle <= angle <= max_angle:
-            lines_not_skew.append([x1, y1, x2, y2])
-    return lines_not_skew
+        if (previous_x1 - x1) >= min_line_gap:
+            lines_not_close.append([x1, y1, x2, y2])
+            previous_x1 = x1
+    return lines_not_close
 
 
-def remove_close_lines(lines, img_height, min_line_gap):
+def _remove_vertically_close_lines(lines, img_height, min_line_gap):
     previous_y1 = img_height
     lines_not_close = []
     for x1, y1, x2, y2 in lines:
@@ -70,66 +99,97 @@ def remove_close_lines(lines, img_height, min_line_gap):
     return lines_not_close
 
 
-image = cv2.imread("../../images/stair/front_left/img029.jpg")
-image = cv2.resize(image, (600, 400))
-img_width = image.shape[1]
-img_height = image.shape[0]
+config_object = ConfigParser()
+config_object.read("../../resources/config.ini")
+conf = config_object["B_FIND_STAIR_CENTER"]
+image = cv2.imread("../../images/stair/back_left/img012.jpg")
+stair = StairDetection(conf, ImageProcessing(conf), Camera(conf))
 
-# min_angle = 0
-# max_angle = 6
-# rho = 1
-# theta = 1 * np.pi / 180
-# thresh = 125
-# min_line_length = 10
-# max_line_gap = 500
-# min_line_gap = 30
-# canny_thresh_1 = 44
-# canny_thresh_2 = 183
+steps_lines_rho = conf["steps_lines_rho"]
+steps_lines_threshold = conf["steps_lines_threshold"]
+steps_lines_min_line_length = conf["steps_lines_min_line_length"]
+steps_lines_min_line_gap = conf["steps_lines_min_line_gap"]
+steps_lines_max_line_gap = conf["steps_lines_max_line_gap"]
+steps_lines_min_angle = conf["steps_lines_min_angle"]
+steps_lines_max_angle = conf["steps_lines_max_angle"]
+steps_canny_thresh_1 = conf["steps_canny_thresh_1"]
+steps_canny_thresh_2 = conf["steps_canny_thresh_2"]
 
-min_angle = 40
-max_angle = 90
-rho = 1
+bars_lines_rho = conf["bars_lines_rho"]
+bars_lines_threshold = conf["bars_lines_threshold"]
+bars_lines_min_line_length = conf["bars_lines_min_line_length"]
+bars_lines_min_line_gap = conf["bars_lines_min_line_gap"]
+bars_lines_max_line_gap = conf["bars_lines_max_line_gap"]
+bars_lines_min_angle = conf["bars_lines_min_angle"]
+bars_lines_max_angle = conf["bars_lines_max_angle"]
+bars_canny_thresh_1 = conf["bars_canny_thresh_1"]
+bars_canny_thresh_2 = conf["bars_canny_thresh_2"]
+
 theta = 1 * np.pi / 180
-thresh = 100
-min_line_length = 10
-max_line_gap = 500
-min_line_gap = 0
-canny_thresh_1 = 44
-canny_thresh_2 = 183
 
-cv2.namedWindow("Hough")
-cv2.createTrackbar("MinAngle", "Hough", min_angle, 90, _pass)
-cv2.createTrackbar("MaxAngle", "Hough", max_angle, 90, _pass)
-cv2.createTrackbar("Rho", "Hough", rho, 255, _pass)
-cv2.createTrackbar("Thresh", "Hough", thresh, 255, _pass)
-cv2.createTrackbar("MinLineLength", "Hough", min_line_length, img_width, _pass)
-cv2.createTrackbar("MaxLineGap", "Hough", max_line_gap, img_height, _pass)
-cv2.createTrackbar("MinLineGap", "Hough", min_line_gap, img_height, _pass)
-cv2.createTrackbar("CannyThresh1", "Hough", canny_thresh_1, 255, _pass)
-cv2.createTrackbar("CannyThresh2", "Hough", canny_thresh_2, 255, _pass)
+cv2.namedWindow("Steps")
+cv2.createTrackbar("rho", "Steps", int(steps_lines_rho), 255, _pass)
+cv2.createTrackbar("threshold", "Steps", int(steps_lines_threshold), 255, _pass)
+cv2.createTrackbar("min_line_length", "Steps", int(steps_lines_min_line_length), image.shape[1], _pass)
+cv2.createTrackbar("min_line_gap", "Steps", int(steps_lines_min_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("max_line_gap", "Steps", int(steps_lines_max_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("min_angle", "Steps", int(steps_lines_min_angle), 90, _pass)
+cv2.createTrackbar("max_angle", "Steps", int(steps_lines_max_angle), 90, _pass)
+cv2.createTrackbar("canny_1", "Steps", int(steps_canny_thresh_1), 255, _pass)
+cv2.createTrackbar("canny_2", "Steps", int(steps_canny_thresh_2), 255, _pass)
+
+cv2.namedWindow("Bars")
+cv2.createTrackbar("rho", "Bars", int(bars_lines_rho), 255, _pass)
+cv2.createTrackbar("threshold", "Bars", int(bars_lines_threshold), 255, _pass)
+cv2.createTrackbar("min_line_length", "Bars", int(bars_lines_min_line_length), image.shape[1], _pass)
+cv2.createTrackbar("min_line_gap", "Bars", int(bars_lines_min_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("max_line_gap", "Bars", int(bars_lines_max_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("min_angle", "Bars", int(bars_lines_min_angle), 90, _pass)
+cv2.createTrackbar("max_angle", "Bars", int(bars_lines_max_angle), 90, _pass)
+cv2.createTrackbar("canny_1", "Bars", int(bars_canny_thresh_1), 255, _pass)
+cv2.createTrackbar("canny_2", "Bars", int(bars_canny_thresh_2), 255, _pass)
 
 while 1:
-    img = image.copy()
-    blurred = cv2.GaussianBlur(img, (5, 5), 0, 0)
-    gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+    img_steps = image.copy()
+    lines_horizontal = detect_lines_probabilistic(
+        img_steps,
+        cv2.getTrackbarPos("rho", "Steps"),
+        cv2.getTrackbarPos("threshold", "Steps"),
+        cv2.getTrackbarPos("min_line_length", "Steps"),
+        cv2.getTrackbarPos("max_line_gap", "Steps"),
+        cv2.getTrackbarPos("canny_1", "Steps"),
+        cv2.getTrackbarPos("canny_2", "Steps")
+    )
+    lines_horizontal = _detect_steps(
+        lines_horizontal,
+        img_steps.shape[0],
+        cv2.getTrackbarPos("min_angle", "Steps"),
+        cv2.getTrackbarPos("max_angle", "Steps"),
+        cv2.getTrackbarPos("min_line_gap", "Steps"))
+    draw_lines(lines_horizontal, img_steps, (255, 0, 0))
+    cv2.imshow("Steps", img_steps)
 
-    # ret, thresh = cv2.threshold(gray, cv2.getTrackbarPos("CannyThresh1", "Hough"), cv2.getTrackbarPos("CannyThresh2", "Hough"), cv2.THRESH_BINARY)
-    # #thresh = cv2.bitwise_not(thresh)
-    # cv2.imshow("Thresh", thresh)
-
-    canny = cv2.Canny(gray, cv2.getTrackbarPos("CannyThresh1", "Hough"), cv2.getTrackbarPos("CannyThresh2", "Hough"), 3)
-    cv2.imshow("Canny", canny)
+    img_bars = image.copy()
+    lines_vertical = detect_lines_probabilistic(
+        img_bars,
+        cv2.getTrackbarPos("rho", "Bars"),
+        cv2.getTrackbarPos("threshold", "Bars"),
+        cv2.getTrackbarPos("min_line_length", "Bars"),
+        cv2.getTrackbarPos("max_line_gap", "Bars"),
+        cv2.getTrackbarPos("canny_1", "Bars"),
+        cv2.getTrackbarPos("canny_2", "Bars")
+    )
+    lines_vertical = _detect_handlebars(
+        lines_vertical,
+        cv2.getTrackbarPos("min_angle", "Bars"),
+        cv2.getTrackbarPos("max_angle", "Bars"),
+        cv2.getTrackbarPos("min_line_gap", "Bars"))
+    draw_lines(lines_vertical, img_bars, (0, 255, 0))
+    cv2.imshow("Bars", img_bars)
 
     # contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # cv2.drawContours(img, contours, -1, (0, 255, 0), 2)
 
-    lines = detect_lines_probabilistic(canny)
-    lines = remove_skew_lines(lines, cv2.getTrackbarPos("MinAngle", "Hough"), cv2.getTrackbarPos("MaxAngle", "Hough"))
-    lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom of the image to top
-    lines = remove_close_lines(lines, img_height, cv2.getTrackbarPos("MinLineGap", "Hough"))
-    draw_lines(lines, img)
-
-    cv2.imshow("Hough", img)
     k = cv2.waitKey(1) & 0xFF
     if k == 27:  # ESC
         break

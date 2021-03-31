@@ -28,11 +28,11 @@ class Drive:
             return
 
         if direction == Direction.ROTATE_LEFT:
-            self.rotate_left(int(self.conf["drive_rotation_angle"]))
+            self.rotate_left(value)
         elif direction == Direction.ROTATE_RIGHT:
-            self.rotate_right(int(self.conf["drive_rotation_angle"]))
+            self.rotate_right(value)
         elif direction == Direction.DRIVE_BACK:
-            self.backwards(int(self.conf["drive_distance_mm"]))
+            self.backwards(value)
         elif direction == Direction.DRIVE_FORWARD:
-            self.forward(int(self.conf["drive_distance_mm"]))
+            self.forward(value)
 
