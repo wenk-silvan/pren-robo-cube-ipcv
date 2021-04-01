@@ -83,7 +83,7 @@ def _remove_horizontally_close_lines(lines, min_line_gap):
     previous_x1 = 0
     lines_not_close = []
     for x1, y1, x2, y2 in lines:
-        if (previous_x1 - x1) >= min_line_gap:
+        if (x1 - previous_x1) >= min_line_gap:
             lines_not_close.append([x1, y1, x2, y2])
             previous_x1 = x1
     return lines_not_close
@@ -102,7 +102,8 @@ def _remove_vertically_close_lines(lines, img_height, min_line_gap):
 config_object = ConfigParser()
 config_object.read("../../resources/config.ini")
 conf = config_object["B_FIND_STAIR_CENTER"]
-image = cv2.imread("../../images/stair/back_left/img012.jpg")
+image = cv2.imread(conf["img_2_path"])
+#image = cv2.resize(image, (1000, 750))
 stair = StairDetection(conf, ImageProcessing(conf), Camera(conf))
 
 steps_lines_rho = conf["steps_lines_rho"]
@@ -127,63 +128,63 @@ bars_canny_thresh_2 = conf["bars_canny_thresh_2"]
 
 theta = 1 * np.pi / 180
 
-cv2.namedWindow("Steps")
-cv2.createTrackbar("rho", "Steps", int(steps_lines_rho), 255, _pass)
-cv2.createTrackbar("threshold", "Steps", int(steps_lines_threshold), 255, _pass)
-cv2.createTrackbar("min_line_length", "Steps", int(steps_lines_min_line_length), image.shape[1], _pass)
-cv2.createTrackbar("min_line_gap", "Steps", int(steps_lines_min_line_gap), image.shape[0], _pass)
-cv2.createTrackbar("max_line_gap", "Steps", int(steps_lines_max_line_gap), image.shape[0], _pass)
-cv2.createTrackbar("min_angle", "Steps", int(steps_lines_min_angle), 90, _pass)
-cv2.createTrackbar("max_angle", "Steps", int(steps_lines_max_angle), 90, _pass)
-cv2.createTrackbar("canny_1", "Steps", int(steps_canny_thresh_1), 255, _pass)
-cv2.createTrackbar("canny_2", "Steps", int(steps_canny_thresh_2), 255, _pass)
+cv2.namedWindow("Steps_Control")
+cv2.createTrackbar("rho", "Steps_Control", int(steps_lines_rho), 255, _pass)
+cv2.createTrackbar("threshold", "Steps_Control", int(steps_lines_threshold), 255, _pass)
+cv2.createTrackbar("min_line_length", "Steps_Control", int(steps_lines_min_line_length), image.shape[1], _pass)
+cv2.createTrackbar("min_line_gap", "Steps_Control", int(steps_lines_min_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("max_line_gap", "Steps_Control", int(steps_lines_max_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("min_angle", "Steps_Control", int(steps_lines_min_angle), 90, _pass)
+cv2.createTrackbar("max_angle", "Steps_Control", int(steps_lines_max_angle), 90, _pass)
+cv2.createTrackbar("canny_1", "Steps_Control", int(steps_canny_thresh_1), 255, _pass)
+cv2.createTrackbar("canny_2", "Steps_Control", int(steps_canny_thresh_2), 255, _pass)
 
-cv2.namedWindow("Bars")
-cv2.createTrackbar("rho", "Bars", int(bars_lines_rho), 255, _pass)
-cv2.createTrackbar("threshold", "Bars", int(bars_lines_threshold), 255, _pass)
-cv2.createTrackbar("min_line_length", "Bars", int(bars_lines_min_line_length), image.shape[1], _pass)
-cv2.createTrackbar("min_line_gap", "Bars", int(bars_lines_min_line_gap), image.shape[0], _pass)
-cv2.createTrackbar("max_line_gap", "Bars", int(bars_lines_max_line_gap), image.shape[0], _pass)
-cv2.createTrackbar("min_angle", "Bars", int(bars_lines_min_angle), 90, _pass)
-cv2.createTrackbar("max_angle", "Bars", int(bars_lines_max_angle), 90, _pass)
-cv2.createTrackbar("canny_1", "Bars", int(bars_canny_thresh_1), 255, _pass)
-cv2.createTrackbar("canny_2", "Bars", int(bars_canny_thresh_2), 255, _pass)
+cv2.namedWindow("Bars_Control")
+cv2.createTrackbar("rho", "Bars_Control", int(bars_lines_rho), 255, _pass)
+cv2.createTrackbar("threshold", "Bars_Control", int(bars_lines_threshold), 255, _pass)
+cv2.createTrackbar("min_line_length", "Bars_Control", int(bars_lines_min_line_length), image.shape[1], _pass)
+cv2.createTrackbar("min_line_gap", "Bars_Control", int(bars_lines_min_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("max_line_gap", "Bars_Control", int(bars_lines_max_line_gap), image.shape[0], _pass)
+cv2.createTrackbar("min_angle", "Bars_Control", int(bars_lines_min_angle), 90, _pass)
+cv2.createTrackbar("max_angle", "Bars_Control", int(bars_lines_max_angle), 90, _pass)
+cv2.createTrackbar("canny_1", "Bars_Control", int(bars_canny_thresh_1), 255, _pass)
+cv2.createTrackbar("canny_2", "Bars_Control", int(bars_canny_thresh_2), 255, _pass)
 
 while 1:
     img_steps = image.copy()
     lines_horizontal = detect_lines_probabilistic(
         img_steps,
-        cv2.getTrackbarPos("rho", "Steps"),
-        cv2.getTrackbarPos("threshold", "Steps"),
-        cv2.getTrackbarPos("min_line_length", "Steps"),
-        cv2.getTrackbarPos("max_line_gap", "Steps"),
-        cv2.getTrackbarPos("canny_1", "Steps"),
-        cv2.getTrackbarPos("canny_2", "Steps")
+        cv2.getTrackbarPos("rho", "Steps_Control"),
+        cv2.getTrackbarPos("threshold", "Steps_Control"),
+        cv2.getTrackbarPos("min_line_length", "Steps_Control"),
+        cv2.getTrackbarPos("max_line_gap", "Steps_Control"),
+        cv2.getTrackbarPos("canny_1", "Steps_Control"),
+        cv2.getTrackbarPos("canny_2", "Steps_Control")
     )
     lines_horizontal = _detect_steps(
         lines_horizontal,
         img_steps.shape[0],
-        cv2.getTrackbarPos("min_angle", "Steps"),
-        cv2.getTrackbarPos("max_angle", "Steps"),
-        cv2.getTrackbarPos("min_line_gap", "Steps"))
+        cv2.getTrackbarPos("min_angle", "Steps_Control"),
+        cv2.getTrackbarPos("max_angle", "Steps_Control"),
+        cv2.getTrackbarPos("min_line_gap", "Steps_Control"))
     draw_lines(lines_horizontal, img_steps, (255, 0, 0))
     cv2.imshow("Steps", img_steps)
 
     img_bars = image.copy()
     lines_vertical = detect_lines_probabilistic(
         img_bars,
-        cv2.getTrackbarPos("rho", "Bars"),
-        cv2.getTrackbarPos("threshold", "Bars"),
-        cv2.getTrackbarPos("min_line_length", "Bars"),
-        cv2.getTrackbarPos("max_line_gap", "Bars"),
-        cv2.getTrackbarPos("canny_1", "Bars"),
-        cv2.getTrackbarPos("canny_2", "Bars")
+        cv2.getTrackbarPos("rho", "Bars_Control"),
+        cv2.getTrackbarPos("threshold", "Bars_Control"),
+        cv2.getTrackbarPos("min_line_length", "Bars_Control"),
+        cv2.getTrackbarPos("max_line_gap", "Bars_Control"),
+        cv2.getTrackbarPos("canny_1", "Bars_Control"),
+        cv2.getTrackbarPos("canny_2", "Bars_Control")
     )
     lines_vertical = _detect_handlebars(
         lines_vertical,
-        cv2.getTrackbarPos("min_angle", "Bars"),
-        cv2.getTrackbarPos("max_angle", "Bars"),
-        cv2.getTrackbarPos("min_line_gap", "Bars"))
+        cv2.getTrackbarPos("min_angle", "Bars_Control"),
+        cv2.getTrackbarPos("max_angle", "Bars_Control"),
+        cv2.getTrackbarPos("min_line_gap", "Bars_Control"))
     draw_lines(lines_vertical, img_bars, (0, 255, 0))
     cv2.imshow("Bars", img_bars)
 
