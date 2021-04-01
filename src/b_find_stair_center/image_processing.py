@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+from ..models.line import Line
+from ..models.point import Point
 
 
 def draw_lines(lines, img):
@@ -59,11 +61,49 @@ class ImageProcessing:
             int(self.conf["steps_canny_thresh_2"])
         )
 
-    def intersection(self, a_p1, a_p2, b_p1, b_p2):
-        da = a_p2 - a_p1
-        db = b_p2 - b_p1
-        dp = a_p1 - b_p1
-        dap = perpendicular(da)
-        denom = np.dot(dap, db)
-        num = np.dot(dap, dp)
-        return (num / denom) * db + b_p1
+    def line_segments_intersect(self, l1: Line, l2: Line):
+        dir1: int = self._direction(l1.p1, l1.p2, l2.p1)
+        dir2: int = self._direction(l1.p1, l1.p2, l2.p2)
+        dir3: int = self._direction(l2.p1, l2.p2, l1.p1)
+        dir4: int = self._direction(l2.p1, l2.p2, l1.p2)
+
+        if dir1 != dir2 and dir3 != dir4:
+            return True  # lines intersect
+        if dir1 == 0 and self._is_point_on_line(l1, l2.p1):  # when p2 of line2 are on the line1
+            return True
+        if dir2 == 0 and self._is_point_on_line(l1, l2.p2):  # when p1 of line2 are on the line1
+            return True
+        if dir3 == 0 and self._is_point_on_line(l2, l1.p1):  # when p2 of line1 are on the line2
+            return True
+        if dir4 == 0 and self._is_point_on_line(l2, l1.p2):  # when p1 of line1 are on the line2
+            return True
+        return False
+
+    def line_intersection(self, l1: Line, l2: Line):
+        x_diff = (l1.p1.x - l1.p2.x, l2.p1.x - l2.p2.x)
+        y_diff = (l1.p1.y - l1.p2.y, l2.p1.y - l2.p2.y)
+
+        div = self._determinant(x_diff, y_diff)
+        if div == 0:  # lines do not intersect
+            return Point(0, 0)
+
+        d = self._determinant((l1.p1.x, l1.p1.y), (l1.p2.x, l1.p2.y)), \
+            self._determinant((l2.p1.x, l2.p1.y), (l2.p2.x, l2.p2.y))
+        x = self._determinant(d, x_diff) / div
+        y = self._determinant(d, y_diff) / div
+        return Point(x, y)
+
+    def _is_point_on_line(self, l: Line, p: Point):
+        return (p.x <= max(l.p1.x, l.p2.x) and p.x <= min(l.p1.x, l.p2.x) and
+                (p.y <= max(l.p1.y, l.p2.y) and p.y <= min(l.p1.y, l.p2.y)))
+
+    def _determinant(self, a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    def _direction(self, a: Point, b: Point, c: Point):
+        value: int = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y)
+        if value == 0:
+            return 0  # co-linear
+        elif value < 0:
+            return 2  # anti-clockwise direction
+        return 1  # clockwise direction

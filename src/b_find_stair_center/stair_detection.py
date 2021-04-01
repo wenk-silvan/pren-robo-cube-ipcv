@@ -1,8 +1,9 @@
 import numpy as np
 import logging
 
-from src.c_pathfinding.line import Line
 from src.camera.camera import Camera
+from src.models.line import Line
+from src.models.point import Point
 from src.movement.direction import Direction
 from src.b_find_stair_center.image_processing import ImageProcessing
 
@@ -16,7 +17,7 @@ def _remove_horizontally_close_lines(lines, min_line_gap):
     previous_x1 = 0
     lines_not_close = []
     for x1, y1, x2, y2 in lines:
-        if (previous_x1 - x1) >= min_line_gap:
+        if (x1 - previous_x1) >= min_line_gap:
             lines_not_close.append([x1, y1, x2, y2])
             previous_x1 = x1
     return lines_not_close
@@ -73,9 +74,7 @@ class StairDetection:
             is_centered (boolean): Flag whether the robot is in the correct spot to move on to pathfinding.
         """
         inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal)
-        tl, tr, bl, br = self._calculate_stair_frame(inters_left, inters_right)
-        blx, bly = bl
-        brx, bry = br
+        tl, tr, bl, br = self._calculate_stair_frame(image.shape[1], inters_left, inters_right, lines_horizontal[0])
         skewness_tolerance = 5
         border_offset = 20
         end_left = border_offset
@@ -85,18 +84,18 @@ class StairDetection:
 
         if bl == (0, 0) and br == (0, 0):  # no stair found
             return Direction.ROTATE_RIGHT, rotation_angle, False
-        elif bry - skewness_tolerance <= bly <= bry + skewness_tolerance:  # stair is straight
-            if end_left < blx and end_right < brx:  # stair is too far right
+        elif br.y - skewness_tolerance <= bl.y <= br.y + skewness_tolerance:  # stair is straight
+            if end_left < bl.x and end_right < br.x:  # stair is too far right
                 return Direction.DRIVE_RIGHT, drive_distance, False
-            elif blx < end_left and brx < end_right:  # stair is too far left
+            elif bl.x < end_left and br.x < end_right:  # stair is too far left
                 return Direction.DRIVE_LEFT, drive_distance, False
-            elif end_left < blx and brx < end_right:  # stair is too far away
+            elif end_left < bl.x and br.x < end_right:  # stair is too far away
                 return Direction.DRIVE_FORWARD, drive_distance, False
-            elif blx <= end_left and end_right <= brx:  # stair is centered
+            elif bl.x <= end_left and end_right <= br.x:  # stair is centered
                 return Direction.DRIVE_FORWARD, 0, True
-        elif bly > bry + border_offset:  # stair is right-skewed
+        elif bl.y - br.y + border_offset < 0:  # stair is right-skewed
             return Direction.ROTATE_RIGHT, rotation_angle, False
-        elif bly < bry - border_offset:  # stair is left-skewed
+        elif bl.y < br.y - border_offset >= 0:  # stair is left-skewed
             return Direction.ROTATE_LEFT, rotation_angle, False
         else:
             logging.error("Stair position is in an unexpected state.")
@@ -108,52 +107,70 @@ class StairDetection:
             local_inters_left = []
             local_inters_right = []
             center_x = ax2 - ((ax2 - ax1) / 2)
+            line_a = Line(Point(ax1, ay1), Point(ax2, ay2))
             for bx1, by1, bx2, by2 in lines_vertical:
-                ix, iy = self.image_processor.intersection((ax1, ay1), (ax2, ay2), (bx1, by1), (bx2, by2))
-                if ix < center_x:
-                    local_inters_left.append([ix, iy])
+                line_b = Line(Point(bx1, by1), Point(bx2, by2))
+                if not self.image_processor.line_segments_intersect(line_a, line_b):
+                    continue
+                i = self.image_processor.line_intersection(line_a, line_b)
+                if i.x < center_x:
+                    local_inters_left.append(i)
                 else:
-                    local_inters_right.append([ix, iy])
+                    local_inters_right.append(i)
 
-            # TODO: Simplify 'get minimum distance' to center with lambda
-            nearest_inters_to_center_left = [0, 0]
-            for i in local_inters_left:
-                if (center_x - i[0]) < nearest_inters_to_center_left:
-                    nearest_inters_to_center_left = i
-            if nearest_inters_to_center_left != [0, 0]:
-                inters_left.append(nearest_inters_to_center_left)
+            nearest_left = self._get_nearest_intersection(center_x, local_inters_left)
+            if not (nearest_left.x == 0 and nearest_left.y == 0):
+                inters_left.append(nearest_left)
 
-            nearest_inters_to_center_right = [0, 0]
-            for i in local_inters_right:
-                if (center_x - i[0]) < nearest_inters_to_center_right:
-                    nearest_inters_to_center_right = i
-            if nearest_inters_to_center_right != [0, 0]:
-                inters_right.append(nearest_inters_to_center_right)
+            else:
+                nearest_right = self._get_nearest_intersection(center_x, local_inters_right)
+                if not (nearest_right.x == 10000 and nearest_right.y == 10000):
+                    inters_right.append(nearest_right)
         return inters_left, inters_right
 
-    def _calculate_stair_frame(self, intersections_left, intersections_right):
-        tl = (0, 0)
-        tr = (0, 0)
-        bl = (0, 0)
-        br = (0, 0)
-        intersections_left.sort(key=lambda i: i[1], reverse=True)
-        intersections_right.sort(key=lambda i: i[1], reverse=True)
+    def _calculate_stair_frame(self, img_width, intersections_left, intersections_right, bottom_line):
+        tl = Point(0, 0)
+        tr = Point(0, 0)
+        bl = Point(0, 0)
+        br = Point(0, 0)
+        intersections_left.sort(key=lambda i: i.y, reverse=True)
+        intersections_right.sort(key=lambda i: i.y, reverse=True)
         if len(intersections_left) > 0:
             bl = intersections_left[0]
             tl = intersections_left[-1]
+        else:
+            bl.x = 0
+            bl.y = bottom_line[1]
+            tl.x = 0
+            tl.y = intersections_right[-1].y
         if len(intersections_right) > 0:
             br = intersections_right[0]
             tr = intersections_right[-1]
+        else:
+            br.x = img_width
+            br.y = bottom_line[3]
+            tr.x = img_width
+            tr.y = intersections_left[-1].y
         return tl, tr, bl, br
 
+    def _get_nearest_intersection(self, x, intersections):
+        nearest = Point(10000, 10000)
+        for i in intersections:
+            if abs(x - i.x) < nearest.x:
+                nearest = i
+        if nearest != Point(0, 0):
+            return nearest
+
     def _detect_handlebars(self, lines):
-        lines = _remove_skew_lines(lines, int(self.conf["bars_lines_min_angle"]), int(self.conf["bars_lines_max_angle"]))
+        lines = _remove_skew_lines(lines, int(self.conf["bars_lines_min_angle"]),
+                                   int(self.conf["bars_lines_max_angle"]))
         lines.sort(key=lambda l: l[0], reverse=False)  # sort lines by x1 from left of the image to right
         lines = _remove_horizontally_close_lines(lines, int(self.conf["bars_lines_min_line_gap"]))
         return lines
 
     def _detect_steps(self, lines, img_height):
-        lines = _remove_skew_lines(lines, int(self.conf["steps_lines_min_angle"]), int(self.conf["steps_lines_max_angle"]))
+        lines = _remove_skew_lines(lines, int(self.conf["steps_lines_min_angle"]),
+                                   int(self.conf["steps_lines_max_angle"]))
         lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by x1 from left of the image to right
         lines = _remove_vertically_close_lines(lines, img_height, int(self.conf["steps_lines_min_line_gap"]))
         return lines
