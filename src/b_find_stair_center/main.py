@@ -21,6 +21,7 @@ def main():
     conf = get_configuration()
     drive = Drive(conf, None)
     camera = Camera(conf)
+    pictograms = PictogramDetection()
     stair = StairDetection(conf, ImageProcessing(conf), camera)
     is_centered = False
 
@@ -29,10 +30,9 @@ def main():
         image = cv2.imread(conf["img_2_path"])
         image = cv2.resize(image, (1280, 960))
 
-        stats = PictogramDetection().detectAndDraw(image)
-
+        pictos = pictograms.detect(image)
         lines_vertical, lines_horizontal = stair.detect_lines(image)
-        direction, value, is_centered = stair.get_next_movement(image, lines_vertical, lines_horizontal)
+        direction, value, is_centered = stair.get_next_movement(image, lines_vertical, lines_horizontal, pictos)
         print("Next move: {} with a distance of {}".format(direction, value))
         drive.move(direction, value)
 

@@ -154,7 +154,8 @@ cv2.createTrackbar("canny_2", "Bars_Control", int(bars_canny_thresh_2), 255, _pa
 
 while 1:
     img = image.copy()
-    pictograms.detect_and_draw(img)
+    pictos = pictograms.detect(img)
+    pictograms.draw(img, pictos)
 
     lines_horizontal, img_canny = detect_lines_probabilistic(
         img,

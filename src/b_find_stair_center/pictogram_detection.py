@@ -1,6 +1,8 @@
 import cv2
 import logging
 
+from src.models.point import Point
+
 path_to_cascades = "../../resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']
 
@@ -11,20 +13,17 @@ class PictogramDetection:
         for c in paths:
             self.cascades.append(cv2.CascadeClassifier(path_to_cascades + c))
 
-    def detect_and_draw(self, img):
+    def detect(self, img):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        work = gray
-        objects = []
-
+        pictograms = []
         for c in self.cascades:
-            objects = c.detectMultiScale(work, 1.15, 3)
+            objects = c.detectMultiScale(gray, 1.15, 3)
             for (x, y, w, h) in objects:
-                p1 = (x, y)
-                p2 = (x + w, y + h)
-                cv2.rectangle(img, p1, p2, (0, 0, 255), 2)
+                area = w * h
+                #if 50 < area < 400:
+                pictograms.append((Point(x, y), Point(x + w, y + h)))
+        return pictograms
 
-                # area = w * h
-                # if area > 400:
-                #   pass
-
-        return objects
+    def draw(self, img, pictograms):
+        color = (0, 0, 255)
+        [cv2.rectangle(img, (p1.x, p1.y), (p2.x, p2.y), color, 2) for (p1, p2) in pictograms]
