@@ -1,5 +1,6 @@
 import cv2
-from src.stair.pathfinding.pathfinder import Pathfinder
+
+from src.c_pathfinding.pathfinder import Pathfinder
 from src.camera.image_manipulator import ImageManipulator
 from configparser import ConfigParser
 
@@ -7,7 +8,7 @@ from configparser import ConfigParser
 def get_configuration(path):
     config_object = ConfigParser()
     config_object.read(path)
-    return config_object["CONFIGURATION"]
+    return config_object["C_PATHFINDING"]
 
 
 def main():
