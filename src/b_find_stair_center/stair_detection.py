@@ -66,7 +66,7 @@ class StairDetection:
             value (int): The value by which should be moved. Either angle for rotating or millimeters for driving.
             is_centered (boolean): Flag whether the robot is in the correct spot to move on to pathfinding.
         """
-        skewness_tolerance = 5
+        max_angle = 2
         border_offset = 20
         end_left = border_offset
         end_right = image.shape[0] - border_offset
@@ -77,22 +77,22 @@ class StairDetection:
             return Direction.ROTATE_RIGHT, rotation_angle, False
 
         inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0][1])
-        tl, tr, bl, br = self._calculate_stair_frame(image.shape[1], inters_left, inters_right, lines_horizontal[0])
+        blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
 
-        if bl == (0, 0) and br == (0, 0):  # no stair found
-            return Direction.ROTATE_RIGHT, rotation_angle, False
-        elif abs(bl.y - br.y) <= skewness_tolerance:  # stair is straight
-            if end_left < bl.x and end_right < br.x:  # stair is too far right
+        # if bl == (0, 0) and br == (0, 0):  # no stair found
+        #     return Direction.ROTATE_RIGHT, rotation_angle, False
+        if angle <= max_angle:  # stair is straight
+            if end_left < blx and end_right < brx:  # stair is too far right
                 return Direction.DRIVE_RIGHT, drive_distance, False
-            elif bl.x < end_left and br.x < end_right:  # stair is too far left
+            elif blx < end_left and brx < end_right:  # stair is too far left
                 return Direction.DRIVE_LEFT, drive_distance, False
-            elif end_left < bl.x and br.x < end_right:  # stair is too far away
+            elif end_left < blx and brx < end_right:  # stair is too far away
                 return Direction.DRIVE_FORWARD, drive_distance, False
-            elif bl.x <= end_left and end_right <= br.x:  # stair is centered
+            elif blx <= end_left and end_right <= brx:  # stair is centered
                 return Direction.DRIVE_FORWARD, 0, True
-        elif bl.y - br.y + border_offset < 0:  # stair is right-skewed
+        elif lines_horizontal[0][1] < lines_horizontal[0][3]:
             return Direction.ROTATE_RIGHT, rotation_angle, False
-        elif bl.y < br.y - border_offset >= 0:  # stair is left-skewed
+        elif lines_horizontal[0][1] > lines_horizontal[0][3]:
             return Direction.ROTATE_LEFT, rotation_angle, False
         else:
             logging.error("Stair position is in an unexpected state.")
@@ -121,41 +121,38 @@ class StairDetection:
             intersections.append(self.image_processor.line_intersection(line_a, line_b))
         return intersections
 
-    def _calculate_stair_frame(self, img_width, intersections_left, intersections_right, bottom_line):
-        tl = Point(0, 0)
-        tr = Point(0, 0)
+    def _calculate_stair_position(self, img_width, intersections_left, intersections_right, bottom_line):
         bl = Point(0, 0)
         br = Point(0, 0)
         intersections_left.sort(key=lambda i: i.y, reverse=True)
         intersections_right.sort(key=lambda i: i.y, reverse=True)
+
+        angle_rad = np.math.atan2(abs(bottom_line[1] - bottom_line[3]), abs(bottom_line[0] - bottom_line[2]))
+        angle = angle_rad * 180 / np.pi
+
         if len(intersections_left) > 0:
             bl = intersections_left[0]
-            tl = intersections_left[-1]
         else:
             bl.x = 0
             bl.y = bottom_line[1]
-            tl.x = 0
-            tl.y = intersections_right[-1].y
+
         if len(intersections_right) > 0:
             br = intersections_right[0]
-            tr = intersections_right[-1]
         else:
             br.x = img_width
             br.y = bottom_line[3]
-            tr.x = img_width
-            tr.y = intersections_left[-1].y
-        return tl, tr, bl, br
+        return bl.x, br.x, angle
 
     def _detect_handlebars(self, lines):
         lines = _remove_skew_lines(lines, int(self.conf["bars_lines_min_angle"]),
                                    int(self.conf["bars_lines_max_angle"]))
-        lines.sort(key=lambda l: l[0], reverse=False)  # sort lines by x1 from left of the image to right
+        lines.sort(key=lambda l: l[0], reverse=False)  # sort lines by x1 from left to right
         lines = _remove_horizontally_close_lines(lines, int(self.conf["bars_lines_min_line_gap"]))
         return lines
 
     def _detect_steps(self, lines, img_height):
         lines = _remove_skew_lines(lines, int(self.conf["steps_lines_min_angle"]),
                                    int(self.conf["steps_lines_max_angle"]))
-        lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by x1 from left of the image to right
+        lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom to top
         lines = _remove_vertically_close_lines(lines, img_height, int(self.conf["steps_lines_min_line_gap"]))
         return lines
