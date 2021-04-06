@@ -119,7 +119,7 @@ class StairDetection:
                     local_inters_right.append(i)
 
             nearest_left = self._get_nearest_intersection(center_x, local_inters_left)
-            if not (nearest_left.x == 0 and nearest_left.y == 0):
+            if not (nearest_left.x == 10000 and nearest_left.y == 10000):
                 inters_left.append(nearest_left)
 
             else:

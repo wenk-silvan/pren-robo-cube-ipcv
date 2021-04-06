@@ -57,7 +57,7 @@ def detect_lines_probabilistic(image, rho, threshold, min_line_length, max_line_
         minLineLength=min_line_length,
         maxLineGap=max_line_gap
     )
-    return [[l[0][0], l[0][1], l[0][2], l[0][3]] for l in detected]
+    return [[l[0][0], l[0][1], l[0][2], l[0][3]] for l in detected], canny
 
 
 def _detect_handlebars(lines, min_angle, max_angle, min_line_gap):
@@ -103,7 +103,7 @@ config_object = ConfigParser()
 config_object.read("../../resources/config.ini")
 conf = config_object["B_FIND_STAIR_CENTER"]
 image = cv2.imread(conf["img_2_path"])
-#image = cv2.resize(image, (1000, 750))
+# image = cv2.resize(image, (1000, 750))
 stair = StairDetection(conf, ImageProcessing(conf), Camera(conf))
 
 steps_lines_rho = conf["steps_lines_rho"]
@@ -151,9 +151,10 @@ cv2.createTrackbar("canny_1", "Bars_Control", int(bars_canny_thresh_1), 255, _pa
 cv2.createTrackbar("canny_2", "Bars_Control", int(bars_canny_thresh_2), 255, _pass)
 
 while 1:
-    img_steps = image.copy()
-    lines_horizontal = detect_lines_probabilistic(
-        img_steps,
+    img = image.copy()
+
+    lines_horizontal, img_canny = detect_lines_probabilistic(
+        img,
         cv2.getTrackbarPos("rho", "Steps_Control"),
         cv2.getTrackbarPos("threshold", "Steps_Control"),
         cv2.getTrackbarPos("min_line_length", "Steps_Control"),
@@ -163,16 +164,13 @@ while 1:
     )
     lines_horizontal = _detect_steps(
         lines_horizontal,
-        img_steps.shape[0],
+        img.shape[0],
         cv2.getTrackbarPos("min_angle", "Steps_Control"),
         cv2.getTrackbarPos("max_angle", "Steps_Control"),
         cv2.getTrackbarPos("min_line_gap", "Steps_Control"))
-    draw_lines(lines_horizontal, img_steps, (255, 0, 0))
-    cv2.imshow("Steps", img_steps)
 
-    img_bars = image.copy()
-    lines_vertical = detect_lines_probabilistic(
-        img_bars,
+    lines_vertical, _ = detect_lines_probabilistic(
+        img,
         cv2.getTrackbarPos("rho", "Bars_Control"),
         cv2.getTrackbarPos("threshold", "Bars_Control"),
         cv2.getTrackbarPos("min_line_length", "Bars_Control"),
@@ -185,8 +183,11 @@ while 1:
         cv2.getTrackbarPos("min_angle", "Bars_Control"),
         cv2.getTrackbarPos("max_angle", "Bars_Control"),
         cv2.getTrackbarPos("min_line_gap", "Bars_Control"))
-    draw_lines(lines_vertical, img_bars, (0, 255, 0))
-    cv2.imshow("Bars", img_bars)
+
+    draw_lines(lines_horizontal, img, (255, 0, 0))
+    draw_lines(lines_vertical, img, (0, 255, 0))
+    cv2.imshow("Canny", img_canny)
+    cv2.imshow("Stair", img)
 
     # contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # cv2.drawContours(img, contours, -1, (0, 255, 0), 2)

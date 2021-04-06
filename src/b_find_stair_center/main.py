@@ -1,3 +1,5 @@
+import logging
+
 import cv2
 import time
 from configparser import ConfigParser
@@ -28,10 +30,13 @@ def main():
 
         lines_vertical, lines_horizontal = stair.detect_lines(image)
         direction, value, is_centered = stair.get_next_movement(image, lines_vertical, lines_horizontal)
+        print("Next move: {} with a distance of {}".format(direction, value))
         drive.move(direction, value)
 
         while drive.is_moving():
-            time.sleep(0.5)
+            pass
+        time.sleep(2)
+
 
 
 if __name__ == '__main__':
