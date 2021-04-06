@@ -5,6 +5,7 @@ import time
 from configparser import ConfigParser
 
 from src.b_find_stair_center.image_processing import ImageProcessing
+from src.b_find_stair_center.pictogram_detection import PictogramDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 from src.camera.camera import Camera
 from src.movement.drive import Drive
@@ -27,6 +28,8 @@ def main():
         # TODO: Use camera snapshot instead of jpg image.
         image = cv2.imread(conf["img_2_path"])
         image = cv2.resize(image, (1280, 960))
+
+        stats = PictogramDetection().detectAndDraw(image)
 
         lines_vertical, lines_horizontal = stair.detect_lines(image)
         direction, value, is_centered = stair.get_next_movement(image, lines_vertical, lines_horizontal)

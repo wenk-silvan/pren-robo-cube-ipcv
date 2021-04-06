@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 from src.b_find_stair_center.image_processing import ImageProcessing
+from src.b_find_stair_center.pictogram_detection import PictogramDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 from src.camera.camera import Camera
 
@@ -105,6 +106,7 @@ conf = config_object["B_FIND_STAIR_CENTER"]
 image = cv2.imread(conf["img_2_path"])
 # image = cv2.resize(image, (1000, 750))
 stair = StairDetection(conf, ImageProcessing(conf), Camera(conf))
+pictograms = PictogramDetection()
 
 steps_lines_rho = conf["steps_lines_rho"]
 steps_lines_threshold = conf["steps_lines_threshold"]
@@ -152,6 +154,7 @@ cv2.createTrackbar("canny_2", "Bars_Control", int(bars_canny_thresh_2), 255, _pa
 
 while 1:
     img = image.copy()
+    pictograms.detect_and_draw(img)
 
     lines_horizontal, img_canny = detect_lines_probabilistic(
         img,
