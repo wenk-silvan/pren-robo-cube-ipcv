@@ -20,8 +20,8 @@ class PictogramDetection:
             objects = c.detectMultiScale(gray, 1.15, 3)
             for (x, y, w, h) in objects:
                 area = w * h
-                #if 50 < area < 400:
-                pictograms.append((Point(x, y), Point(x + w, y + h)))
+                if 1000 < area < 15000:
+                    pictograms.append((Point(x, y), Point(x + w, y + h)))
         return pictograms
 
     def draw(self, img, pictograms):
