@@ -54,27 +54,30 @@ class StairDetection:
         lines_horizontal = self._detect_steps(lines_horizontal, image.shape[0])
         return lines_vertical, lines_horizontal
 
-    def get_next_movement(self, image, lines_vertical, lines_horizontal, pictograms):
+    def get_next_movement(self, image, lines_vertical, lines_horizontal, pictograms, can_see_obstacles):
         """
         Determine instruction for next movement by analyzing the given lines, pictograms and image.
         :param image: The image where the stair was searched.
         :param lines_vertical: All vertical lines found in the image using given parameters. Should be handlebars.
         :param lines_horizontal: All horizontal lines found in the image using given parameters. Should be steps.
         :param pictograms: List of detected pictograms. Each as a tuple of tl and br src.models.Point.
+        :param can_see_obstacles: True if obstacles were detected, false if not.
         :return:
             direction (Direction): The direction of the next movement.
             value (int): The value by which should be moved. Either angle for rotating or millimeters for driving.
             is_centered (boolean): Flag whether the robot is in the correct spot to move on to pathfinding.
         """
-        max_angle = 2
-        border_offset = 20
+        max_angle = int(self.conf["stair_straight_max_angle"])
+        border_offset = int(self.conf["stair_border_offset"])
         end_left = border_offset
         end_right = image.shape[0] - border_offset
-        rotation_angle = 5
-        drive_distance = 10
+        rotation_angle = int(self.conf["rotation_angle"])
+        drive_distance = int(self.conf["drive_distance"])
 
-        if len(pictograms) < 1:  # TODO: Handle case if no pictogram detected
-            return Direction.ROTATE_RIGHT, rotation_angle, False
+        if len(pictograms) < 1:
+            if can_see_obstacles:  # stair is too close
+                return Direction.DRIVE_BACK, drive_distance, False
+            return Direction.ROTATE_RIGHT, rotation_angle, False  # stair not found
 
         inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0][1])
         blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
