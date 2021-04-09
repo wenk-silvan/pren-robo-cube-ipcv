@@ -7,6 +7,8 @@ from src.b_find_stair_center.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 from src.camera.camera import Camera
 from src.movement.drive import Drive
+from src.communication.serial_handler import SerialHandler
+from src.movement.drive_fake import DriveFake
 
 
 def get_configuration():
@@ -17,7 +19,9 @@ def get_configuration():
 
 def main():
     conf = get_configuration()
-    drive = Drive(conf, None)
+    # handler = SerialHandler()
+    # drive = Drive(handler)
+    drive = DriveFake()
     camera = Camera(conf)
 
     pictogram_detection = ObjectDetection("../../resources/cascades/pictogram/",

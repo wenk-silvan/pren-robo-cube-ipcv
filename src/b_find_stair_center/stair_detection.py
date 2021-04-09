@@ -77,13 +77,11 @@ class StairDetection:
         if len(pictograms) < 1:
             if can_see_obstacles:  # stair is too close
                 return Direction.DRIVE_BACK, drive_distance, False
-            return Direction.ROTATE_RIGHT, rotation_angle, False  # stair not found
+            return Direction.ROTATE_BODY_RIGHT, rotation_angle, False  # stair not found
 
         inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0][1])
         blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
 
-        # if bl == (0, 0) and br == (0, 0):  # no stair found
-        #     return Direction.ROTATE_RIGHT, rotation_angle, False
         if angle <= max_angle:  # stair is straight
             if end_left < blx and end_right < brx:  # stair is too far right
                 return Direction.DRIVE_RIGHT, drive_distance, False
@@ -94,9 +92,9 @@ class StairDetection:
             elif blx <= end_left and end_right <= brx:  # stair is centered
                 return Direction.DRIVE_FORWARD, 0, True
         elif lines_horizontal[0][1] < lines_horizontal[0][3]:
-            return Direction.ROTATE_RIGHT, rotation_angle, False
+            return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
         elif lines_horizontal[0][1] > lines_horizontal[0][3]:
-            return Direction.ROTATE_LEFT, rotation_angle, False
+            return Direction.ROTATE_BODY_LEFT, rotation_angle, False
         else:
             logging.error("Stair position is in an unexpected state.")
 
