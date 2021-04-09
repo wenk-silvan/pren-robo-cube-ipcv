@@ -1,35 +1,9 @@
 import numpy as np
 import logging
 
-from src.common.models.line import Line
 from src.common.models.point import Point
 from src.common.movement.direction import Direction
 from src.b_find_stair_center.image_processing import ImageProcessing
-
-
-def _remove_skew_lines(lines, min_angle, max_angle):
-    return [l for l in lines
-            if min_angle <= np.math.atan2(abs(l.p1.y - l.p2.y), abs(l.p1.x - l.p2.x)) * 180 / np.pi <= max_angle]
-
-
-def _remove_horizontally_close_lines(lines, min_line_gap):
-    previous_x1 = 0
-    lines_not_close = []
-    for l in lines:
-        if (l.p1.x - previous_x1) >= min_line_gap:
-            lines_not_close.append(l)
-            previous_x1 = l.p1.x
-    return lines_not_close
-
-
-def _remove_vertically_close_lines(lines, img_height, min_line_gap):
-    previous_y1 = img_height
-    lines_not_close = []
-    for l in lines:
-        if (previous_y1 - l.p1.y) >= min_line_gap:
-            lines_not_close.append(l)
-            previous_y1 = l.p1.y
-    return lines_not_close
 
 
 class StairDetection:
@@ -116,7 +90,21 @@ class StairDetection:
             intersections.append(self.image_processor.line_intersection(line_a, line_b))
         return intersections
 
-    def _calculate_stair_position(self, img_width, intersections_left, intersections_right, bottom_line):
+    def _detect_handlebars(self, lines):
+        lines = StairDetection._remove_skew_lines(lines, int(self.conf["bars_lines_min_angle"]),
+                                                  int(self.conf["bars_lines_max_angle"]))
+        lines.sort(key=lambda l: l.p1.x, reverse=False)  # sort lines by x1 from left to right
+        return StairDetection._remove_horizontally_close_lines(lines, int(self.conf["bars_lines_min_line_gap"]))
+
+    def _detect_steps(self, lines, img_height):
+        lines = StairDetection._remove_skew_lines(lines, int(self.conf["steps_lines_min_angle"]),
+                                                  int(self.conf["steps_lines_max_angle"]))
+        lines.sort(key=lambda l: l.p1.y, reverse=True)  # sort lines by y1 from bottom to top
+        return StairDetection._remove_vertically_close_lines(lines, img_height,
+                                                             int(self.conf["steps_lines_min_line_gap"]))
+
+    @staticmethod
+    def _calculate_stair_position(img_width, intersections_left, intersections_right, bottom_line):
         bl = Point(0, 0)
         br = Point(0, 0)
         intersections_left.sort(key=lambda i: i.y, reverse=True)
@@ -138,14 +126,27 @@ class StairDetection:
             br.y = bottom_line.p2.y
         return bl.x, br.x, angle
 
-    def _detect_handlebars(self, lines):
-        lines = _remove_skew_lines(lines, int(self.conf["bars_lines_min_angle"]),
-                                   int(self.conf["bars_lines_max_angle"]))
-        lines.sort(key=lambda l: l.p1.x, reverse=False)  # sort lines by x1 from left to right
-        return _remove_horizontally_close_lines(lines, int(self.conf["bars_lines_min_line_gap"]))
+    @staticmethod
+    def _remove_horizontally_close_lines(lines, min_line_gap):
+        previous_x1 = 0
+        lines_not_close = []
+        for l in lines:
+            if (l.p1.x - previous_x1) >= min_line_gap:
+                lines_not_close.append(l)
+                previous_x1 = l.p1.x
+        return lines_not_close
 
-    def _detect_steps(self, lines, img_height):
-        lines = _remove_skew_lines(lines, int(self.conf["steps_lines_min_angle"]),
-                                   int(self.conf["steps_lines_max_angle"]))
-        lines.sort(key=lambda l: l.p1.y, reverse=True)  # sort lines by y1 from bottom to top
-        return _remove_vertically_close_lines(lines, img_height, int(self.conf["steps_lines_min_line_gap"]))
+    @staticmethod
+    def _remove_skew_lines(lines, min_angle, max_angle):
+        return [l for l in lines
+                if min_angle <= np.math.atan2(abs(l.p1.y - l.p2.y), abs(l.p1.x - l.p2.x)) * 180 / np.pi <= max_angle]
+
+    @staticmethod
+    def _remove_vertically_close_lines(lines, img_height, min_line_gap):
+        previous_y1 = img_height
+        lines_not_close = []
+        for l in lines:
+            if (previous_y1 - l.p1.y) >= min_line_gap:
+                lines_not_close.append(l)
+                previous_y1 = l.p1.y
+        return lines_not_close
