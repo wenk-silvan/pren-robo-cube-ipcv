@@ -1,4 +1,4 @@
-from src.c_pathfinding.instruction import Instruction
+from src.common.models.instruction import Instruction
 
 
 class Path:

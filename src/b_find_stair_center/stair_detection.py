@@ -8,27 +8,27 @@ from src.b_find_stair_center.image_processing import ImageProcessing
 
 
 def _remove_skew_lines(lines, min_angle, max_angle):
-    return [[x1, y1, x2, y2] for x1, y1, x2, y2 in lines
-            if min_angle <= np.math.atan2(abs(y1 - y2), abs(x1 - x2)) * 180 / np.pi <= max_angle]
+    return [l for l in lines
+            if min_angle <= np.math.atan2(abs(l.p1.y - l.p2.y), abs(l.p1.x - l.p2.x)) * 180 / np.pi <= max_angle]
 
 
 def _remove_horizontally_close_lines(lines, min_line_gap):
     previous_x1 = 0
     lines_not_close = []
-    for x1, y1, x2, y2 in lines:
-        if (x1 - previous_x1) >= min_line_gap:
-            lines_not_close.append([x1, y1, x2, y2])
-            previous_x1 = x1
+    for l in lines:
+        if (l.p1.x - previous_x1) >= min_line_gap:
+            lines_not_close.append(l)
+            previous_x1 = l.p1.x
     return lines_not_close
 
 
 def _remove_vertically_close_lines(lines, img_height, min_line_gap):
     previous_y1 = img_height
     lines_not_close = []
-    for x1, y1, x2, y2 in lines:
-        if (previous_y1 - y1) >= min_line_gap:
-            lines_not_close.append([x1, y1, x2, y2])
-            previous_y1 = y1
+    for l in lines:
+        if (previous_y1 - l.p1.y) >= min_line_gap:
+            lines_not_close.append(l)
+            previous_y1 = l.p1.y
     return lines_not_close
 
 
@@ -42,8 +42,8 @@ class StairDetection:
         Detect lines of stair in the given image.
         :param image: The image in where to find the stair.
         :return:
-            lines_vertical (array): All vertical lines found in the image using given parameters. Should be handlebars.
-            lines_horizontal (array): All horizontal lines found in the image using given parameters. Should be steps.
+            lines_vertical (Line[]): All vertical lines found in the image using given parameters. Should be handlebars.
+            lines_horizontal (Line[]): All horizontal lines found in the image using given parameters. Should be steps.
         """
         lines_vertical = self.image_processor.detect_lines_vertical(image)
         lines_vertical = self._detect_handlebars(lines_vertical)
@@ -88,9 +88,9 @@ class StairDetection:
                 return Direction.DRIVE_FORWARD, drive_distance, False
             elif blx <= end_left and end_right <= brx:  # stair is centered
                 return Direction.DRIVE_FORWARD, 0, True
-        elif lines_horizontal[0][1] < lines_horizontal[0][3]:
+        elif lines_horizontal[0].p1.y < lines_horizontal[0].p2.y:
             return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
-        elif lines_horizontal[0][1] > lines_horizontal[0][3]:
+        elif lines_horizontal[0].p1.y > lines_horizontal[0].p2.y:
             return Direction.ROTATE_BODY_LEFT, rotation_angle, False
         else:
             logging.error("Stair position is in an unexpected state.")
@@ -98,10 +98,8 @@ class StairDetection:
     def _calculate_intersections(self, lines_vertical, lines_horizontal, pivot: Point):
         inters_left = []
         inters_right = []
-        for ax1, ay1, ax2, ay2 in lines_horizontal:
-            line_horizontal = Line(Point(ax1, ay1), Point(ax2, ay2))
+        for line_horizontal in lines_horizontal:
             intersections = self._get_line_intersections(line_horizontal, lines_vertical)
-
             inters_left_local = list(filter(lambda i: i.x < pivot.x, intersections))
             inters_right_local = list(filter(lambda i: i.x >= pivot.x, intersections))
             if len(inters_left_local) > 0:
@@ -112,8 +110,7 @@ class StairDetection:
 
     def _get_line_intersections(self, line_a, lines_vertical):
         intersections = []
-        for bx1, by1, bx2, by2 in lines_vertical:
-            line_b = Line(Point(bx1, by1), Point(bx2, by2))
+        for line_b in lines_vertical:
             if not self.image_processor.line_segments_intersect(line_a, line_b):
                 continue
             intersections.append(self.image_processor.line_intersection(line_a, line_b))
@@ -125,32 +122,30 @@ class StairDetection:
         intersections_left.sort(key=lambda i: i.y, reverse=True)
         intersections_right.sort(key=lambda i: i.y, reverse=True)
 
-        angle_rad = np.math.atan2(abs(bottom_line[1] - bottom_line[3]), abs(bottom_line[0] - bottom_line[2]))
+        angle_rad = np.math.atan2(abs(bottom_line.p1.y - bottom_line.p2.y), abs(bottom_line.p1.x - bottom_line.p2.x))
         angle = angle_rad * 180 / np.pi
 
         if len(intersections_left) > 0:
             bl = intersections_left[0]
         else:
             bl.x = 0
-            bl.y = bottom_line[1]
+            bl.y = bottom_line.p1.y
 
         if len(intersections_right) > 0:
             br = intersections_right[0]
         else:
             br.x = img_width
-            br.y = bottom_line[3]
+            br.y = bottom_line.p2.y
         return bl.x, br.x, angle
 
     def _detect_handlebars(self, lines):
         lines = _remove_skew_lines(lines, int(self.conf["bars_lines_min_angle"]),
                                    int(self.conf["bars_lines_max_angle"]))
-        lines.sort(key=lambda l: l[0], reverse=False)  # sort lines by x1 from left to right
-        lines = _remove_horizontally_close_lines(lines, int(self.conf["bars_lines_min_line_gap"]))
-        return lines
+        lines.sort(key=lambda l: l.p1.x, reverse=False)  # sort lines by x1 from left to right
+        return _remove_horizontally_close_lines(lines, int(self.conf["bars_lines_min_line_gap"]))
 
     def _detect_steps(self, lines, img_height):
         lines = _remove_skew_lines(lines, int(self.conf["steps_lines_min_angle"]),
                                    int(self.conf["steps_lines_max_angle"]))
-        lines.sort(key=lambda l: l[1], reverse=True)  # sort lines by y1 from bottom to top
-        lines = _remove_vertically_close_lines(lines, img_height, int(self.conf["steps_lines_min_line_gap"]))
-        return lines
+        lines.sort(key=lambda l: l.p1.y, reverse=True)  # sort lines by y1 from bottom to top
+        return _remove_vertically_close_lines(lines, img_height, int(self.conf["steps_lines_min_line_gap"]))

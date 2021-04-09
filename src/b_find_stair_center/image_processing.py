@@ -5,11 +5,9 @@ from src.common.models.point import Point
 
 
 def draw_lines(lines, img):
-    for x1, y1, x2, y2 in lines:
-        p1 = (x1, y1)
-        p2 = (x2, y2)
-        if not p1 or not p2:
-            continue
+    for line in lines:
+        p1 = (line.p1.x, line.p1.y)
+        p2 = (line.p2.x, line.p2.y)
         cv2.line(img, p1, p2, (255, 0, 0), 2)
 
 
@@ -25,7 +23,7 @@ def detect_lines_probabilistic(image, rho, threshold, min_line_length, max_line_
         minLineLength=min_line_length,
         maxLineGap=max_line_gap
     )
-    return [[l[0][0], l[0][1], l[0][2], l[0][3]] for l in detected]
+    return [Line(Point(l[0][0], l[0][1]), Point(l[0][2], l[0][3])) for l in detected]
 
 
 def perpendicular(a):

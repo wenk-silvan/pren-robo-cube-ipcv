@@ -2,10 +2,10 @@ import numpy as np
 import cv2
 import itertools
 
-from src.c_pathfinding.obstacle import Obstacle
-from src.c_pathfinding.path import Path
-from src.c_pathfinding.stair import Stair
-from src.common.models import Line
+from src.common.models.line import Line
+from src.common.models.obstacle import Obstacle
+from src.common.models.path import Path
+from src.common.models.stair import Stair
 from src.common.movement.direction import Direction
 
 
