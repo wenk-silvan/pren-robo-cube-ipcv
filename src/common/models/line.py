@@ -1,4 +1,4 @@
-from src.models.point import Point
+from src.common.models.point import Point
 import logging
 
 

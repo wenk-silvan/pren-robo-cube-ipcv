@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 from src.b_find_stair_center.image_processing import ImageProcessing
-from src.b_find_stair_center.object_detection import ObjectDetection
+from src.common.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 
 

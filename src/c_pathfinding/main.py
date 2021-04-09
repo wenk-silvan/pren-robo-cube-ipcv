@@ -1,7 +1,7 @@
 import cv2
 
 from src.c_pathfinding.pathfinder import Pathfinder
-from src.camera.image_manipulator import ImageManipulator
+from src.common.image_manipulator import ImageManipulator
 from configparser import ConfigParser
 
 

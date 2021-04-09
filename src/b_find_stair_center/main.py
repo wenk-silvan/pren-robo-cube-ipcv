@@ -3,12 +3,10 @@ import time
 from configparser import ConfigParser
 
 from src.b_find_stair_center.image_processing import ImageProcessing
-from src.b_find_stair_center.object_detection import ObjectDetection
+from src.common.communication.serial_handler import SerialHandler
+from src.common.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
-from src.camera.camera import Camera
-from src.movement.drive import Drive
-from src.communication.serial_handler import SerialHandler
-from src.movement.drive_fake import DriveFake
+from src.common.movement.drive_fake import DriveFake
 
 
 def get_configuration():
@@ -19,9 +17,10 @@ def get_configuration():
 
 def main():
     conf = get_configuration()
-    handler = SerialHandler()
-    drive = Drive(handler)
-    camera = Camera()
+    # handler = SerialHandler()
+    # drive = Drive(handler)
+    # camera = Camera()
+    drive = DriveFake()
 
     pictogram_detection = ObjectDetection("../../resources/cascades/pictogram/",
                                           ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
@@ -30,7 +29,8 @@ def main():
     is_centered = False
 
     while not is_centered:
-        image = camera.snapshot()
+        # image = camera.snapshot()
+        image = cv2.resize(cv2.imread(conf["img_2_path"]), (1280, 960))
 
         pictograms = pictogram_detection.detect(image, 1000, 15000, float(conf["detection_pictogram_scale"]),
                                                 int(conf["detection_pictogram_neighbours"]))

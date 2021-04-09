@@ -1,8 +1,8 @@
 import logging
 import time
 
-from src.movement.direction import Direction
-from src.movement.wheel_state import WheelState
+from src.common.movement.direction import Direction
+from src.common.movement.wheel_state import WheelState
 
 
 class Drive:

@@ -1,7 +1,8 @@
-import cv2
 import logging
 
-from src.models.point import Point
+import cv2
+
+from src.common.models.point import Point
 
 
 class ObjectDetection:

@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
-from ..models.line import Line
-from ..models.point import Point
+from src.common.models.line import Line
+from src.common.models.point import Point
 
 
 def draw_lines(lines, img):

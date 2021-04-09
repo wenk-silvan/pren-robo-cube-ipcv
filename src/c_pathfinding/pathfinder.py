@@ -5,8 +5,8 @@ import itertools
 from src.c_pathfinding.obstacle import Obstacle
 from src.c_pathfinding.path import Path
 from src.c_pathfinding.stair import Stair
-from src.models.line import Line
-from src.movement.direction import Direction
+from src.common.models import Line
+from src.common.movement.direction import Direction
 
 
 class Pathfinder:
