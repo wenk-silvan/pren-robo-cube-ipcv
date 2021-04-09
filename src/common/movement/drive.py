@@ -99,17 +99,17 @@ class Drive:
         pass
 
     def _rotate_front_wheels(self, angle):
-        servo = b'x30'
+        servo = b'\x30'
         self._rotate_wheels(servo, angle)
         pass
 
     def _rotate_back_wheels(self, angle):
-        servo = b'x31'
+        servo = b'\x31'
         self._rotate_wheels(servo, angle)
         pass
 
     def _rotate_all_wheels(self, angle):
-        servo = b'x32'
+        servo = b'\x32'
         self._rotate_wheels(servo, angle)
         pass
 
@@ -125,7 +125,7 @@ class Drive:
             pass
 
         # Actual driving
-        command = b'x10' + direction.to_bytes(1, byteorder='big', signed=True) + distance_cm
+        command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True) + distance_cm
         self._serial_handler.send_command(command)
 
         # Stay in Loop while still driving
@@ -148,7 +148,7 @@ class Drive:
             pass
 
         # Actual driving
-        command = b'x15' + direction.to_bytes(1, byteorder='big', signed=True) + distance_cm
+        command = b'\x15' + direction.to_bytes(1, byteorder='big', signed=True) + distance_cm
         self._serial_handler.send_command(command)
 
         # Stay in Loop while still driving
