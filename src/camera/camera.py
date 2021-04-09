@@ -1,11 +1,15 @@
-import cv2
+import imutils
+from imutils.video.pivideostream import PiVideoStream
 
 
 class Camera:
-    def __init__(self, configuration):
-        cap = cv2.VideoCapture(int(configuration["camera_number"]))
-        cap.set(3, int(configuration["camera_frame_width"]))
-        cap.set(4, int(configuration["camera_frame_height"]))
+    def __init__(self):
+        self.stream = PiVideoStream()
+        self.stream.start()
+
+    def __exit__(self):
+        self.stream.stop()
 
     def snapshot(self):
-        pass
+        frame = self.stream.read()
+        return imutils.resize(image=frame, width=1280, height=960)

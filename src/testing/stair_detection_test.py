@@ -1,5 +1,4 @@
 from __future__ import print_function
-import math
 from configparser import ConfigParser
 
 import cv2
@@ -8,7 +7,6 @@ import numpy as np
 from src.b_find_stair_center.image_processing import ImageProcessing
 from src.b_find_stair_center.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
-from src.camera.camera import Camera
 
 
 def _pass(_):
@@ -105,7 +103,7 @@ config_object.read("../../resources/config.ini")
 conf = config_object["B_FIND_STAIR_CENTER"]
 image = cv2.imread(conf["img_2_path"])
 # image = cv2.resize(image, (1000, 750))
-stair = StairDetection(conf, ImageProcessing(conf), Camera(conf))
+stair = StairDetection(conf, ImageProcessing(conf))
 
 pictogram_detection = ObjectDetection("../../resources/cascades/pictogram/",
                                       ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])

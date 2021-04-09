@@ -1,7 +1,6 @@
 import numpy as np
 import logging
 
-from src.camera.camera import Camera
 from src.models.line import Line
 from src.models.point import Point
 from src.movement.direction import Direction
@@ -34,8 +33,7 @@ def _remove_vertically_close_lines(lines, img_height, min_line_gap):
 
 
 class StairDetection:
-    def __init__(self, configuration, image_processor: ImageProcessing, camera: Camera):
-        self.camera = camera
+    def __init__(self, configuration, image_processor: ImageProcessing):
         self.conf = configuration
         self.first_step = None
         self.image_processor = image_processor

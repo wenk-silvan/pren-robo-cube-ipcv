@@ -19,21 +19,18 @@ def get_configuration():
 
 def main():
     conf = get_configuration()
-    # handler = SerialHandler()
-    # drive = Drive(handler)
-    drive = DriveFake()
-    camera = Camera(conf)
+    handler = SerialHandler()
+    drive = Drive(handler)
+    camera = Camera()
 
     pictogram_detection = ObjectDetection("../../resources/cascades/pictogram/",
                                           ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
     obstacle_detection = ObjectDetection("../../resources/cascades/obstacle/", ["obstacle.xml"])
-    stair = StairDetection(conf, ImageProcessing(conf), camera)
+    stair = StairDetection(conf, ImageProcessing(conf))
     is_centered = False
 
     while not is_centered:
-        # TODO: Use camera snapshot instead of jpg image.
-        image = cv2.imread(conf["img_2_path"])
-        image = cv2.resize(image, (1280, 960))
+        image = camera.snapshot()
 
         pictograms = pictogram_detection.detect(image, 1000, 15000, float(conf["detection_pictogram_scale"]),
                                                 int(conf["detection_pictogram_neighbours"]))
