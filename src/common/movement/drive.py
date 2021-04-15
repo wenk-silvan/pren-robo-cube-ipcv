@@ -113,11 +113,14 @@ class Drive:
         self._rotate_wheels(servo, angle)
         pass
 
-    # All 4 Motors in the same direction/speed
-    # direction: -2 backwards fast, -1 backwards ,1 forward, 2 forward fast
-    # distance_cm: range 0 to 256
     def _drive(self, direction, distance_cm):
-        if direction not in [-2, -1, 1, 2]:
+        """
+        Actual Driving. Triggers the 4 Motors (all in the same direction)
+        :param direction: [-2, -1] = backward, [0] = stop, [1, 2] = forward
+        :param distance_cm: [0 to 256] The distance in cm the robot should drive
+        :return:
+        """
+        if direction not in [-2, -1, 0,  1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
             pass
         if distance_cm > 256:
@@ -136,11 +139,15 @@ class Drive:
                 set drive speed to 1
             }'''
 
-    # All 4 Motors in 2 Groups (left/right)
-    # direction: -2 left fast, -1 left, 1 right, 2 right fast
-    # distance_cm: range 0 to 256
     def _rotate_body(self, direction, distance_cm):
-        if direction not in [-2, -1, 1, 2]:
+        """
+        Actual Turning. Triggers the 4 Motors (left/right in opposite direction)
+        :param direction: [-2, -1] = turn left, [0] = stop, [1, 2] = turn right
+        :param distance_cm: [0 to 256] The "distance" for the motors to travel.
+        # TODO This needs to be tested and tuned with the whole body attached!
+        :return:
+        """
+        if direction not in [-2, -1, 0, 1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
             pass
         if distance_cm > 256:
@@ -159,10 +166,13 @@ class Drive:
                 set drive speed to 1
             }'''
 
-    # Front or back servo control
-    # direction: -2 left fast, -1 left, 1 right, 2 right fast
-    # distance_cm: range 0 to 256
     def _rotate_wheels(self, servo, angle):
+        """
+        Actual Rotation of the Wheels. Triggers one or two servos.
+        :param servo: x30 = front, x31 = back, x32 = both
+        :param angle: [-45 to 90] the Angle the Servos should turn.
+        :return:
+        """
         # Send rotation command
         command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'x00'
         self._serial_handler.send_command(command)
