@@ -2,7 +2,7 @@ from src.common.movement.direction import Direction
 from src.common.movement.wheel_state import WheelState
 
 
-class DriveFake:
+class Drive:
     def __init__(self):
         self.wheels_front = WheelState.STRAIGHT
         self.wheels_back = WheelState.STRAIGHT

@@ -1,9 +1,11 @@
 import cv2
 
 from src.c_pathfinding.pathfinder import Pathfinder
-from src.common.camera.camera import Camera
 from src.common.image_manipulator import ImageManipulator
 from configparser import ConfigParser
+
+from src.common.models.obstacle import Obstacle
+from src.common.object_detection import ObjectDetection
 
 
 def get_configuration(path):
@@ -15,11 +17,21 @@ def get_configuration(path):
 def main():
     conf = get_configuration("../../resources/config.ini")
     # img_raw = Camera().snapshot()
-    img_raw = cv2.imread(conf["img_3_path"])
-    image_manipulator = ImageManipulator(img_raw)
-    img = image_manipulator.transform_to_2d()
-    finder = Pathfinder(img, conf)
-    obstacles = finder.find_obstacles(cv2.CascadeClassifier(conf["cascade_path"]))
+    image_raw = cv2.imread(conf["img_3_path"])
+    image_manipulator = ImageManipulator(image_raw)
+    image = image_manipulator.transform_to_2d()
+    finder = Pathfinder(image, conf)
+
+    detector = ObjectDetection("../../resources/cascades/obstacle/", ["obstacle.xml"])
+    # TODO: Adjust detection parameters
+    obstacles = detector.detect(image, 1000, 100000, float(conf["detection_obstacle_scale"]),
+                                int(conf["detection_obstacle_neighbours"]))
+
+    detector.draw(image, obstacles, (255, 0, 0))
+    cv2.imshow("Result", image)
+    cv2.waitKey(0)
+
+    obstacles = [Obstacle(o[0], o[1]) for o in obstacles]
     stair_with_objects = finder.create_stair_with_objects(obstacles)
     stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
     path = finder.calculate_path(stair_with_areas)
