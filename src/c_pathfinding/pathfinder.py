@@ -57,7 +57,8 @@ class Pathfinder:
         lines = [Line(Point(l[0][0], l[0][1]), Point(l[0][2], l[0][3])) for l in detected]
         lines = self._remove_skew_lines(lines, 0, self.steps_max_angle)
         lines.sort(key=lambda l: l.p1.y, reverse=True)  # sort lines by y1 from bottom to top
-        lines = self._remove_vertically_close_lines(lines, self.img_height, self.stair_min_line_gap, self.stair_min_line_gap_decrease)
+        lines = self._remove_vertically_close_lines(lines, self.img_height, self.stair_min_line_gap,
+                                                    self.stair_min_line_gap_decrease)
         Pathfinder.draw_lines(lines, self.img)  # TODO: Remove this line
         return lines
 
@@ -107,22 +108,24 @@ class Pathfinder:
         return stair_areas
 
     def calculate_path(self, stair_areas: Stair):
-        path = Path()
         possible_positions = self._calculate_path_sequential(stair_areas)
         if len(possible_positions) == 0:
             print("Err: No passable path found.")
             return
 
-        # TODO: Pick best instead of firstl
-        current_pos = self.stair_end_left
-        for pos in possible_positions[0]:
-            distance_millimeter = abs(current_pos - pos) / self.pixel_per_mm
-            if pos < current_pos:
-                path.add_instruction(Direction.DRIVE_LEFT, distance_millimeter)
-            else:
-                path.add_instruction(Direction.DRIVE_RIGHT, distance_millimeter)
-            current_pos = pos
-        return path
+        paths = []
+        for positions in possible_positions:
+            current_pos = self.stair_end_left
+            path = Path()
+            for pos in positions:
+                distance_millimeter = abs(current_pos - pos) / self.pixel_per_mm
+                if pos < current_pos:
+                    path.add_instruction(Direction.DRIVE_LEFT, distance_millimeter)
+                else:
+                    path.add_instruction(Direction.DRIVE_RIGHT, distance_millimeter)
+                current_pos = pos
+            paths.append(path)
+        return paths
 
     def _get_x_coords_possible_areas(self, obstacles_sorted_left_to_right):
         # TODO: Improve hardcoded count of obstacles per row
@@ -229,6 +232,10 @@ class Pathfinder:
             k = cv2.waitKey(1) & 0xFF
             if k == 27:  # ESC
                 break
+
+    @staticmethod
+    def determine_best_path(paths):
+        return min(paths, key=lambda p: len(list(filter(lambda i: i.distance > 0, p.instructions))))
 
     @staticmethod
     def draw_line(p1, p2, img, color):

@@ -35,7 +35,8 @@ def main():
     cv2.waitKey(0)
 
     stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
-    path = finder.calculate_path(stair_with_areas)
+    paths = finder.calculate_path(stair_with_areas)
+    path = Pathfinder.determine_best_path(paths)
     print(path.to_string())
 
 
