@@ -9,6 +9,7 @@ class Drive:
     def __init__(self, serial_handler):
         self._serial_handler = serial_handler
         self.wheels_orientation = WheelState.STRAIGHT
+        self._rotate_all_wheels(0)
 
     def backward(self, distance):
         """
@@ -116,11 +117,11 @@ class Drive:
     def _drive(self, direction, distance_cm):
         """
         Actual Driving. Triggers the 4 Motors (all in the same direction)
-        :param direction: [-2, -1] = backward, [0] = stop, [1, 2] = forward
+        :param direction: [-2, -1] = backward, [1, 2] = forward
         :param distance_cm: [0 to 256] The distance in cm the robot should drive
         :return:
         """
-        if direction not in [-2, -1, 0,  1, 2]:
+        if direction not in [-2, -1,  1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
             pass
         if distance_cm > 256:
@@ -142,12 +143,12 @@ class Drive:
     def _rotate_body(self, direction, distance_cm):
         """
         Actual Turning. Triggers the 4 Motors (left/right in opposite direction)
-        :param direction: [-2, -1] = turn left, [0] = stop, [1, 2] = turn right
+        :param direction: [-2, -1] = turn left, [1, 2] = turn right
         :param distance_cm: [0 to 256] The "distance" for the motors to travel.
         # TODO This needs to be tested and tuned with the whole body attached!
         :return:
         """
-        if direction not in [-2, -1, 0, 1, 2]:
+        if direction not in [-2, -1, 1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
             pass
         if distance_cm > 256:

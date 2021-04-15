@@ -48,6 +48,7 @@ class SerialHandler:
             if answer[0:3].decode('utf-8').rstrip() == 'ok!':
                 logging.debug("successfully sent Command")
                 return True
+        # TODO Implement handling if "nok" received! try 3 times?
 
         return False
 
