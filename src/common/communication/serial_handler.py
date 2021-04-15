@@ -29,7 +29,7 @@ class SerialHandler:
         """
         self.ser = serial.Serial(tty_device, baud_rate, timeout=1)
         self.ser.flush()
-        logging.info("Serial connection established")
+        logging.info("Serial connection established to {} with baud-rate {}".format(tty_device, baud_rate))
 
     def send_command(self, byte_array):
         """
