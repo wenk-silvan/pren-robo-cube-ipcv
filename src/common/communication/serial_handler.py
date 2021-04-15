@@ -29,7 +29,7 @@ class SerialHandler:
         """
         self.ser = serial.Serial(tty_device, baud_rate, timeout=1)
         self.ser.flush()
-        logging.info("Serial connection established")
+        logging.info("Serial connection established to {} with baud-rate {}".format(tty_device, baud_rate))
 
     def send_command(self, byte_array):
         """
@@ -48,6 +48,7 @@ class SerialHandler:
             if answer[0:3].decode('utf-8').rstrip() == 'ok!':
                 logging.debug("successfully sent Command")
                 return True
+        # TODO Implement handling if "nok" received! try 3 times?
 
         return False
 
