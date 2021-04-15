@@ -23,7 +23,11 @@ class ImageManipulator:
         cv2.imshow("Result", tmp1)
         cv2.waitKey(0)
 
-    def transform_to_2d(self):
+    def transform_to_2d(self, dimensions):
+        """
+        Squeeze the image into a 2d image by removing it's perspective. Top, left and right coordinates are hardcoded.
+        :return: new image.
+        """
         tl, tr, bl, br = self.__find_edges()
         pts1 = np.float32(
             [list(tl),
@@ -39,7 +43,7 @@ class ImageManipulator:
         )
 
         matrix = cv2.getPerspectiveTransform(pts1, pts2)
-        return cv2.warpPerspective(self.image, matrix, (600, 600))
+        return cv2.warpPerspective(self.image, matrix, dimensions)
 
     def __draw_circles(self):
         tl, tr, bl, br = self.__find_edges()
