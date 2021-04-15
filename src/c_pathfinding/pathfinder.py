@@ -5,6 +5,7 @@ import itertools
 from src.common.models.line import Line
 from src.common.models.obstacle import Obstacle
 from src.common.models.path import Path
+from src.common.models.point import Point
 from src.common.models.stair import Stair
 from src.common.movement.direction import Direction
 
@@ -23,20 +24,6 @@ class Pathfinder:
         self.stair_end_left = self.stair_width_offset
         self.pixel_per_mm = (self.img_width - self.stair_width_offset) / int(self.conf["staircase_width_millimeter"])
         self.robocube_width = int(self.pixel_per_mm * int(self.conf["robot_width_millimeter"]))
-
-    def find_obstacles(self, cascade):
-        scale_val = float(self.conf["obstacles_scale_val"])
-        neighbours = int(self.conf["obstacles_neighbors"])
-        min_height = int(self.conf["obstacles_min_height"])
-        min_width = int(self.conf["obstacles_min_width"])
-
-        gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        obstacles = cascade.detectMultiScale(gray, scale_val, neighbours)
-        for (x, y, w, h) in obstacles:
-            if w < min_width or h < min_height:
-                continue
-            self.obstacles.append(Obstacle(x, y, w, h))
-        return self.obstacles
 
     def find_hough_lines(self):
         gauss = cv2.GaussianBlur(self.img, (5, 5), 0, 0)
@@ -82,18 +69,16 @@ class Pathfinder:
         if not isinstance(obstacles, list):
             print("Err: The provided object must be a list of Obstacle.")
             return
+
         stair = Stair()
         lines = self.find_hough_lines()
-        Pathfinder.draw_obstacles(obstacles, self.img)
-        cv2.imshow("Result", self.img)
-        cv2.waitKey(0)
 
         distance_to_step = int(self.conf["obstacles_distance_to_step"])
         if lines:
             for line in lines:
                 obs = [o for o in obstacles if
-                       line.p1y - distance_to_step <= o.bottom_center[1] <= line.p1y + distance_to_step]
-                obs.sort(key=lambda l: l.bottom_left[0], reverse=False)  # sort obstacles from left to right
+                       line.p1.y - distance_to_step <= o.bottom_center.y <= line.p1.y + distance_to_step]
+                obs.sort(key=lambda l: l.bottom_left.x, reverse=False)  # sort obstacles from left to right
                 stair.add_row(obs)
         return stair
 
@@ -140,11 +125,11 @@ class Pathfinder:
         if count == 1:
             obstacle = obstacles_sorted_left_to_right[0]
             # and width to left end of row is bigger than Robo-Cube
-            if (obstacle.bottom_left[0] - self.stair_end_left) > self.robocube_width:
-                areas.append((self.stair_end_left, obstacle.bottom_left[0]))
+            if (obstacle.bottom_left.x - self.stair_end_left) > self.robocube_width:
+                areas.append((self.stair_end_left, obstacle.bottom_left.x))
             # and width to right end of row is bigger than Robo-Cube
-            if (self.stair_end_right - obstacle.bottom_right[0]) > self.robocube_width:
-                areas.append((obstacle.bottom_right[0], self.stair_end_right))
+            if (self.stair_end_right - obstacle.bottom_right.x) > self.robocube_width:
+                areas.append((obstacle.bottom_right.x, self.stair_end_right))
             return areas
 
         # if two obstacles
@@ -153,16 +138,16 @@ class Pathfinder:
             obstacle2 = obstacles_sorted_left_to_right[1]
 
             # and width to left end of row of obstacle 1 is bigger than Robo-Cube
-            if (obstacle1.bottom_left[0] - self.stair_end_left) > self.robocube_width:
-                areas.append((self.stair_end_left, obstacle1.bottom_left[0]))
+            if (obstacle1.bottom_left.x - self.stair_end_left) > self.robocube_width:
+                areas.append((self.stair_end_left, obstacle1.bottom_left.x))
 
             # and width between obstacles is bigger than Robo-Cube
-            if (obstacle2.bottom_left[0] - obstacle1.bottom_right[0]) > self.robocube_width:
-                areas.append((obstacle1.bottom_right[0], obstacle2.bottom_left[0]))
+            if (obstacle2.bottom_left.x - obstacle1.bottom_right.x) > self.robocube_width:
+                areas.append((obstacle1.bottom_right.x, obstacle2.bottom_left.x))
 
             # and width to right end of row of obstacle 2 is bigger than Robo-Cube
-            if (self.stair_end_right - obstacle2.bottom_right[0]) > self.robocube_width:
-                areas.append((obstacle2.bottom_right[0], self.stair_end_right))
+            if (self.stair_end_right - obstacle2.bottom_right.x) > self.robocube_width:
+                areas.append((obstacle2.bottom_right.x, self.stair_end_right))
             return areas
 
         # if three obstacles
@@ -172,20 +157,20 @@ class Pathfinder:
             obstacle3 = obstacles_sorted_left_to_right[2]
 
             # and width to left end of row of obstacle 1 is bigger than Robo-Cube
-            if (obstacle1.bottom_left[0] - self.stair_end_left) > self.robocube_width:
-                areas.append((self.stair_end_left, obstacle1.bottom_left[0]))
+            if (obstacle1.bottom_left.x - self.stair_end_left) > self.robocube_width:
+                areas.append((self.stair_end_left, obstacle1.bottom_left.x))
 
             # and width between obstacle 1 and 2 is bigger than Robo-Cube
-            if (obstacle2.bottom_left[0] - obstacle1.bottom_right[0]) > self.robocube_width:
-                areas.append((obstacle1.bottom_right[0], obstacle2.bottom_left[0]))
+            if (obstacle2.bottom_left.x - obstacle1.bottom_right.x) > self.robocube_width:
+                areas.append((obstacle1.bottom_right.x, obstacle2.bottom_left.x))
 
             # and width between obstacle 2 and 3 is bigger than Robo-Cube
-            if (obstacle3.bottom_left[0] - obstacle2.bottom_right[0]) > self.robocube_width:
-                areas.append((obstacle2.bottom_right[0], obstacle3.bottom_left[0]))
+            if (obstacle3.bottom_left.x - obstacle2.bottom_right.x) > self.robocube_width:
+                areas.append((obstacle2.bottom_right.x, obstacle3.bottom_left.x))
 
             # and width to right end of row of obstacle 2 is bigger than Robo-Cube
-            if (self.stair_end_right - obstacle3.bottom_right[0]) > self.robocube_width:
-                areas.append((obstacle3.bottom_right[0], self.stair_end_right))
+            if (self.stair_end_right - obstacle3.bottom_right.x) > self.robocube_width:
+                areas.append((obstacle3.bottom_right.x, self.stair_end_right))
             return areas
 
     def __calculate_path_sequential(self, stair):
@@ -250,16 +235,8 @@ class Pathfinder:
             if not p1 or not p2:
                 continue
             Pathfinder.draw_line(p1=p1, p2=p2, img=img, color=(255, 0, 0))
-            drawn.append(Line(p1, p2))
+            drawn.append(Line(Point(p1[0], p1[1]), Point(p2[0], p2[1])))
         return drawn
-
-    @staticmethod
-    def draw_obstacles(obstacles, img):
-        for o in obstacles:
-            Pathfinder.draw_line(o.top_left, o.top_right, img=img, color=(0, 255, 0))
-            Pathfinder.draw_line(o.top_left, o.bottom_left, img=img, color=(0, 255, 0))
-            Pathfinder.draw_line(o.bottom_left, o.bottom_right, img=img, color=(0, 255, 0))
-            Pathfinder.draw_line(o.bottom_right, o.top_right, img=img, color=(0, 255, 0))
 
     @staticmethod
     def hough_lines_parameters_adjustment(img_width, img_height, canny, image, max_line_skewness,
