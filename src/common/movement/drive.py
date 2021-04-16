@@ -95,22 +95,21 @@ class Drive:
         Triggers the robot to rotate to the right, around his own axis.
         :param angle: The angle in degrees.
         """
-        # TODO angle to distance
         self._rotate_body(1, angle)
         pass
 
     def _rotate_front_wheels(self, angle):
-        servo = b'\x30'
-        self._rotate_wheels(servo, angle)
-        pass
-
-    def _rotate_back_wheels(self, angle):
         servo = b'\x31'
         self._rotate_wheels(servo, angle)
         pass
 
-    def _rotate_all_wheels(self, angle):
+    def _rotate_back_wheels(self, angle):
         servo = b'\x32'
+        self._rotate_wheels(servo, angle)
+        pass
+
+    def _rotate_all_wheels(self, angle):
+        servo = b'\30'
         self._rotate_wheels(servo, angle)
         pass
 
@@ -121,7 +120,7 @@ class Drive:
         :param distance_cm: [0 to 256] The distance in cm the robot should drive
         :return:
         """
-        if direction not in [-2, -1,  1, 2]:
+        if direction not in [-2, -1, 1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
             pass
         if distance_cm > 256:
@@ -129,7 +128,8 @@ class Drive:
             pass
 
         # Actual driving
-        command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True) + distance_cm
+        command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True)\
+                  + distance_cm.to_bytes(1, byteorder='big', signed=False)
         self._serial_handler.send_command(command)
 
         # Stay in Loop while still driving
@@ -156,7 +156,8 @@ class Drive:
             pass
 
         # Actual driving
-        command = b'\x15' + int(direction).to_bytes(1, byteorder='big', signed=True) + distance_cm
+        command = b'\x15' + direction.to_bytes(1, byteorder='big', signed=True)\
+                  + distance_cm.to_bytes(1, byteorder='big', signed=False)
         self._serial_handler.send_command(command)
 
         # Stay in Loop while still driving
