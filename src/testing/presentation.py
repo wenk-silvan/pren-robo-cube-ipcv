@@ -19,14 +19,14 @@ def climb_step(drive: Drive, climb: Climb):
     drive.forward(forward_head_mm)
     climb.body_up(duration)
     drive.forward(forward_body_mm)
-    climb.body_up(duration)
+    climb.tail_up(duration)
     drive.forward(forward_tail_mm)
 
 
 def main():
-    handler = SerialHandler()
-    drive = Drive(handler)
-    climb = Climb(handler)
+    serial_handler = SerialHandler()
+    drive = Drive(serial_handler)
+    climb = Climb(serial_handler)
     drive_floor(drive)
     climb_step(drive, climb)
 
