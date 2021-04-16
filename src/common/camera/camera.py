@@ -14,5 +14,9 @@ class Camera:
         self.stream.stop()
 
     def snapshot(self):
+        """
+        Read the current frame and resize to 1280x980
+        :return:
+        """
         frame = self.stream.read()
         return imutils.resize(image=frame, width=1280, height=960)

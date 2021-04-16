@@ -3,7 +3,6 @@ import cv2
 import itertools
 
 from src.common.models.line import Line
-from src.common.models.obstacle import Obstacle
 from src.common.models.path import Path
 from src.common.models.point import Point
 from src.common.models.stair import Stair
@@ -35,6 +34,10 @@ class Pathfinder:
         self.robocube_width = int(self.pixel_per_mm * int(conf["robot_width_millimeter"]))
 
     def detect_steps(self):
+        """
+        Detect the steps by applying image filters and hough transformation.
+        :return: Line[] -> if the image is good enough, the coordinates of the steps.
+        """
         gauss = cv2.GaussianBlur(self.img, (5, 5), 0, 0)
         gray = cv2.cvtColor(gauss, cv2.COLOR_BGR2GRAY)
         canny = cv2.Canny(gray, self.steps_canny_thresh1, self.steps_canny_thresh2, 3)
@@ -63,6 +66,11 @@ class Pathfinder:
         return lines
 
     def convert_to_matrice(self, stair):
+        """
+        Deprecated
+        :param stair:
+        :return:
+        """
         if not isinstance(stair, Stair):
             print("Err: The provided object is not of type Stair.")
             return
@@ -84,12 +92,14 @@ class Pathfinder:
         return matrice
 
     def create_stair_with_objects(self, obstacles):
+        """
+        Create Stair by detecting the steps in the image and combine with the given obstacle coordinates.
+        :return: Stair object with obstacles as areas.
+        """
         if not isinstance(obstacles, list):
             print("Err: The provided object must be a list of Obstacle.")
             return
-
         stair = Stair()
-
         lines = self.detect_steps()
         if lines:
             for line in lines:
@@ -100,6 +110,11 @@ class Pathfinder:
         return stair
 
     def create_stair_passable_areas(self, stair_objects: Stair):
+        """
+        Create new Stair by calculating the free spaces of the Stair with the obstacles.
+        :param stair_objects: Stair object with obstacles as areas.
+        :return: Stair object with free spaces as areas.
+        """
         stair_areas = Stair()
         for i in range(stair_objects.count()):
             row = stair_objects.get(i)
@@ -108,6 +123,11 @@ class Pathfinder:
         return stair_areas
 
     def calculate_path(self, stair_areas: Stair):
+        """
+        Calculate all possible paths to clear the stair.
+        :param stair_areas: Stair with free spaces as areas.
+        :return: Path[]
+        """
         possible_positions = self._calculate_path_sequential(stair_areas)
         if len(possible_positions) == 0:
             print("Err: No passable path found.")
@@ -235,6 +255,11 @@ class Pathfinder:
 
     @staticmethod
     def determine_best_path(paths):
+        """
+        Get Path which counts the most instructions where the distance is 0.
+        :param paths: Path[] - Possible paths to clear the stair.
+        :return: Path - The fastest path.
+        """
         return min(paths, key=lambda p: len(list(filter(lambda i: i.distance > 0, p.instructions))))
 
     @staticmethod
