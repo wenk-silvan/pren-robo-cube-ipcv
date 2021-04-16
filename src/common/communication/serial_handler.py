@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import serial
 import logging
 logging.basicConfig(filename='communication.log', filemode='w', level=logging.DEBUG)
@@ -10,9 +11,8 @@ def checksum(byte_array):
     :param byte_array: of length 4 e.g. b'\x19\x10\x00\x29'
     :return: True for valid checksum, False or failed communication
     """
-    if len(byte_array) == 4:
-        if (sum(byte_array[0:3]) % 256) == byte_array[3]:
-            return True
+    if (sum(byte_array[0:3]) % 256) == byte_array[3]:
+        return True
     return False
 
 
@@ -37,25 +37,32 @@ class SerialHandler:
         :param byte_array: of length 3 e.g. b'\x19\x10\x00'
         """
         data = byte_array + (sum(byte_array) % 256).to_bytes(1, byteorder='big', signed=False)
-
         logging.debug("sending command: " + str(data))
-        self.ser.write(data)
 
-        answer = self.ser.read(4)
-        logging.debug("received answer " + str(answer))
+        answer = None
+        answer_valid = False
 
-        if checksum(answer):
-            if answer[0:3].decode('utf-8').rstrip() == 'ok!':
-                logging.debug("successfully sent Command")
-                return True
-        # TODO Implement handling if "nok" received! try 3 times?
+        # Try 5 times to get a valid answer (checksum and not "nok") before sending False back to the caller
+        for i in range(5):
+            self.ser.write(data)
+            answer = self.ser.read(4)
+            if checksum(answer):
+                if answer[0:3].decode('utf-8').rstrip() != 'nok':
+                    logging.debug("received valid answer " + str(answer))
+                    answer_valid = True
+                    break
+            time.sleep(0.05)
 
+        if answer_valid:
+            return answer
+
+        logging.warning("no valid answer received!")
         return False
 
     def check_status(self, byte_array):
         """
         Asks the STM32 Controller to provide information over different registers.
-        Status of motors, position of servos, readings of sensors
+        Status of motors, readings of sensors, status overall
         :param byte_array: Defines what registers to read from
         :return: 4 bytes from STM32 Controller or False if checksum was wrong
         """
