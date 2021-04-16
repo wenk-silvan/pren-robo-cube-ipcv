@@ -10,7 +10,7 @@ def start():
     pictogram = course_detect_pictogram.run()
     snapshot = course_find_stair_center.run()
     path: Path = course_pathfinding.run(snapshot=snapshot)
-    position = course_climb_stair.run(path=path)
+    course_climb_stair.run(path=path)
     success = course_find_pictogram.run(pictogram=pictogram, position_robot=path.get_final_position())
     if success:
         print("YAY!")

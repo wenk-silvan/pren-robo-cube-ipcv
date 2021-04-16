@@ -34,6 +34,11 @@ def run(snapshot):
     stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
     paths = finder.calculate_path(stair_with_areas)
     path = Pathfinder.determine_best_path(paths)
+    print("====== All paths: ======")
+    for p in paths:
+        print(p.to_string())
+
+    print("====== Fastest path: ======")
     print(path.to_string())
     return path
 

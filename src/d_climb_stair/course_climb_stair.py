@@ -35,7 +35,6 @@ def run(path: Path):
         climber = Climber(conf, drive, climb)
         result = climber.move(path)
         print("Clearing the stair was " + ("successful." if result else "unsuccessful."))
-        return path
     except Exception:
         print("Error in course_climb_stair")
 

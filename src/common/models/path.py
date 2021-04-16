@@ -28,10 +28,12 @@ class Path:
                 position += i.distance
         return position
 
-
     def to_string(self):
         s = ""
+        counter = 0
         for ins in self.instructions:
+            counter += 1
+            s += "{}. ".format(counter)
             s += ins.direction.name
             s += " - "
             s += str(int(ins.distance)) + " mm"

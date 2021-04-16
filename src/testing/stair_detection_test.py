@@ -165,7 +165,7 @@ while 1:
     obs_detected = obstacle_detection.detect(img, 2000, 30000,
                                              float(conf["detection_obstacle_scale"]),
                                              cv2.getTrackbarPos("obs_neighbours", "Object_Detection"))
-    pictogram_detection.draw(img, pics_detected, (255, 0, 0))
+    pictogram_detection.draw(img, pics_detected, (0, 0, 255))
     obstacle_detection.draw(img, obs_detected, (0, 0, 255))
 
     lines_horizontal, img_canny = detect_lines_probabilistic(
