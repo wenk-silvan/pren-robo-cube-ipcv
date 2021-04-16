@@ -14,7 +14,7 @@ def get_configuration():
     return config_object["D_CLIMB_STAIR"]
 
 
-def get_path():
+def get_fake_path():
     # TODO: Get path from state machine.
     path = Path()
     path.add_instruction(Direction.DRIVE_LEFT, 20)
@@ -26,15 +26,19 @@ def get_path():
     return path
 
 
-def main():
-    conf = get_configuration()
-    handler = SerialHandler()
-    drive = Drive(handler)
-    climb = Climb(handler)
-    climber = Climber(conf, drive, climb)
-    result = climber.move(get_path())
-    print("Clearing the stair was " + ("successful." if result else "unsuccessful."))
+def run(path: Path):
+    try:
+        conf = get_configuration()
+        handler = SerialHandler()
+        drive = Drive(handler)
+        climb = Climb(handler)
+        climber = Climber(conf, drive, climb)
+        result = climber.move(path)
+        print("Clearing the stair was " + ("successful." if result else "unsuccessful."))
+        return path
+    except Exception:
+        print("Error in course_climb_stair")
 
 
 if __name__ == '__main__':
-    main()
+    run(get_fake_path())

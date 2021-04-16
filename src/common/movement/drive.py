@@ -156,7 +156,7 @@ class Drive:
             pass
 
         # Actual driving
-        command = b'\x15' + direction.to_bytes(1, byteorder='big', signed=True) + distance_cm
+        command = b'\x15' + int(direction).to_bytes(1, byteorder='big', signed=True) + distance_cm
         self._serial_handler.send_command(command)
 
         # Stay in Loop while still driving

@@ -14,6 +14,8 @@ path_to_cascades = "../../resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
 objectCount = 21  # how many objects to count for recognition
+
+
 #################################################################
 
 
@@ -52,7 +54,7 @@ class PictogramDetector:
         return stats
 
 
-def main():
+def run():
     detector = PictogramDetector()
     stats = detector.detect()
     logging.debug(stats)
@@ -63,7 +65,8 @@ def main():
     comb = 'some' if result is 'paint' else 'a'
     t2s.say("I am looking for %s %s" % (comb, result))
     t2s.runAndWait()
+    return result
 
 
 if __name__ == '__main__':
-    main()
+    run()

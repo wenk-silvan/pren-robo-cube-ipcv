@@ -14,11 +14,8 @@ def get_configuration(path):
     return config_object["C_PATHFINDING"]
 
 
-def main():
-    conf = get_configuration("../../resources/config.ini")
-    # img_raw = Camera().snapshot()
-    image_raw = cv2.imread(conf["img_3_path"])
-    image_manipulator = ImageManipulator(image_raw)
+def run(snapshot):
+    image_manipulator = ImageManipulator(snapshot)
     image = image_manipulator.transform_to_2d((600, 600))
     finder = Pathfinder(image, conf)
 
@@ -38,6 +35,10 @@ def main():
     paths = finder.calculate_path(stair_with_areas)
     path = Pathfinder.determine_best_path(paths)
     print(path.to_string())
+    return path
 
 
-main()
+if __name__ == '__main__':
+    conf = get_configuration("../../resources/config.ini")
+    image_raw = cv2.imread(conf["img_3_path"])
+    run(image_raw)

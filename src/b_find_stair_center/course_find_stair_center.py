@@ -16,7 +16,7 @@ def get_configuration():
     return config_object["B_FIND_STAIR_CENTER"]
 
 
-def main():
+def run():
     conf = get_configuration()
     handler = SerialHandler()
     drive = Drive(handler)
@@ -29,7 +29,7 @@ def main():
     is_centered = False
 
     while not is_centered:
-        image = cv2.resize(camera.snapshot(), (1280, 960))
+        image = camera.snapshot()
         # image = cv2.resize(cv2.imread(conf["img_2_path"]), (1280, 960))
 
         pictograms = pictogram_detection.detect(image, 1000, 15000, float(conf["detection_pictogram_scale"]),
@@ -44,7 +44,8 @@ def main():
         print("Next move: {} with a distance of {}".format(direction, value))
         drive.move(direction, value)
         time.sleep(2)
+    return camera.snapshot()
 
 
 if __name__ == '__main__':
-    main()
+    run()
