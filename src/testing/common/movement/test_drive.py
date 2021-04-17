@@ -22,46 +22,47 @@ class TestDrive(TestCase):
         assert self.drive.backward(30) is True
 
     def test_forward(self):
-        self.fail()
+        assert self.drive.forward(30) is True
 
     def test_forward_to_object(self):
-        self.fail()
+        assert self.drive.forward_to_object(30) is True
 
     def test_left(self):
-        self.fail()
+        assert self.drive.left(30) is True
 
     def test_move(self):
-        self.fail()
+        for i in range(7):
+            assert self.drive.move(3, 30) is True is True
 
     def test_right(self):
-        self.fail()
+        assert self.drive.right(30) is True
 
     def test_rotate_body_left(self):
-        self.fail()
+        assert self.drive.rotate_body_left(30) is True
 
     def test_rotate_body_right(self):
-        self.fail()
+        assert self.drive.rotate_body_right(30) is True
 
     def test_stop(self):
-        self.fail()
+        assert self.drive.stop() is True
 
     def test__rotate_front_wheels(self):
-        self.fail()
+        assert self.drive._rotate_front_wheels(30) is True
 
     def test__rotate_back_wheels(self):
-        self.fail()
+        assert self.drive._rotate_back_wheels(30) is True
 
     def test__rotate_all_wheels(self):
-        self.fail()
+        assert self.drive._rotate_all_wheels(30) is True
 
     def test__drive(self):
-        self.drive._drive(0, 12)
+        assert self.drive._drive(2, 12) is True
 
     def test__rotate_body(self):
-        self.fail()
+        assert self.drive._rotate_body(2, 30) is True
 
     def test__polling_motors(self):
-        self.fail()
+        assert self.drive._polling_motors() is True
 
     def test__rotate_wheels(self):
-        self.fail()
+        assert self.drive._rotate_wheels(b'\x30', 90) is True
