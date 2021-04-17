@@ -33,7 +33,7 @@ class SerialHandler:
         self.ser.flush()
         logging.info("Serial connection established to {} with baud-rate {}".format(self.ser.name, self.ser.baudrate))
 
-    def send_command(self, byte_array):
+    def send_command(self, byte_array) -> bytes or False:
         """
         Sends a byte array of 3 bytes + 1 byte checksum to the STM32 Controller and receives a status message.
         :param byte_array: of length 3 e.g. b'\x19\x10\x00'
@@ -41,22 +41,15 @@ class SerialHandler:
         data = byte_array + (sum(byte_array) % 256).to_bytes(1, byteorder='big', signed=False)
         logging.debug("sending command: " + str(data))
 
-        answer = None
-        answer_valid = False
-
-        # Try 5 times to get a valid answer (checksum and not "nok") before sending False back to the caller
+        # Try 5 times to get a valid answer (checksum and not "nok") before sending the answer back to the caller
         for i in range(5):
             self.ser.write(data)
             answer = self.ser.read(4)
             if checksum(answer):
                 if answer[0:3].decode('utf-8').rstrip() != 'nok':
                     logging.debug("received valid answer " + str(answer))
-                    answer_valid = True
-                    break
+                    return answer
             time.sleep(0.05)
-
-        if answer_valid:
-            return answer
 
         logging.warning("no valid answer received!")
         return False
