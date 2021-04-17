@@ -19,8 +19,7 @@ class Drive:
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
-        self._drive(-2, distance)
-        pass
+        return self._drive(-2, distance)
 
     def forward(self, distance):
         """
@@ -30,7 +29,7 @@ class Drive:
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
-        self._drive(2, distance)
+        return self._drive(2, distance)
         pass
 
     def forward_to_object(self):
@@ -40,6 +39,7 @@ class Drive:
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
         # TODO: Drive until sensor hits.
+        return False   # Fail the test
 
     def left(self, distance):
         """
@@ -49,7 +49,7 @@ class Drive:
         if self.wheels_orientation == WheelState.STRAIGHT:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
-        self._drive(-2, distance)
+        return self._drive(-2, distance)
 
     def move(self, direction, value):
         """
@@ -58,18 +58,18 @@ class Drive:
         :param value: Either distance in millimeters or angle in degrees
         :return:
         """
-        if direction == Direction.DRIVE_BACK:
-            self.backward(value)
-        elif direction == Direction.DRIVE_FORWARD:
-            self.forward(value)
-        elif direction == Direction.DRIVE_LEFT:
-            self.left(value)
-        elif direction == Direction.DRIVE_RIGHT:
-            self.right(value)
-        elif direction == Direction.ROTATE_BODY_RIGHT:
-            self.rotate_body_right(value)
-        elif direction == Direction.ROTATE_BODY_LEFT:
-            self.rotate_body_left(value)
+        if direction == Direction.DRIVE_BACK.value:
+            return self.backward(value)
+        elif direction == Direction.DRIVE_FORWARD.value:
+            return self.forward(value)
+        elif direction == Direction.DRIVE_LEFT.value:
+            return self.left(value)
+        elif direction == Direction.DRIVE_RIGHT.value:
+            return self.right(value)
+        elif direction == Direction.ROTATE_BODY_RIGHT.value:
+            return self.rotate_body_right(value)
+        elif direction == Direction.ROTATE_BODY_LEFT.value:
+            return self.rotate_body_left(value)
 
     def right(self, distance):
         """
@@ -79,7 +79,7 @@ class Drive:
         if self.wheels_orientation == WheelState.STRAIGHT:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
-        self._drive(2, distance)
+        return self._drive(2, distance)
 
     def rotate_body_left(self, angle):
         """
@@ -87,34 +87,29 @@ class Drive:
         :param angle: The angle in degrees.
         """
         # TODO angle to distance try measure conclude
-        self._rotate_body(-1, angle)
-        pass
+        return self._rotate_body(-1, angle)
 
     def rotate_body_right(self, angle):
         """
         Triggers the robot to rotate to the right, around his own axis.
         :param angle: The angle in degrees.
         """
-        self._rotate_body(1, angle)
-        pass
+        return self._rotate_body(1, angle)
 
     def stop(self):
-        self._drive(1, 0)
+        return self._drive(1, 0)
 
     def _rotate_front_wheels(self, angle):
         servo = b'\x31'
-        self._rotate_wheels(servo, angle)
-        pass
+        return self._rotate_wheels(servo, angle)
 
     def _rotate_back_wheels(self, angle):
         servo = b'\x32'
-        self._rotate_wheels(servo, angle)
-        pass
+        return self._rotate_wheels(servo, angle)
 
     def _rotate_all_wheels(self, angle):
         servo = b'\x30'
-        self._rotate_wheels(servo, angle)
-        pass
+        return self._rotate_wheels(servo, angle)
 
     def _drive(self, direction, distance_cm):
         """
@@ -125,10 +120,10 @@ class Drive:
         """
         if direction not in [-2, -1, 1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
-            pass
+            raise ValueError
         if distance_cm > 256:
             logging.warning("%i ")
-            pass
+            raise ValueError
 
         # Actual driving
         command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True)\
@@ -148,10 +143,10 @@ class Drive:
         """
         if direction not in [-2, -1, 1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
-            pass
+            raise ValueError
         if distance_cm > 256:
             logging.warning("%i ")
-            pass
+            raise ValueError
 
         # Actual driving
         command = b'\x15' + direction.to_bytes(1, byteorder='big', signed=True)\
@@ -171,7 +166,7 @@ class Drive:
             status = self._serial_handler.check_status(b'\x19\x00\x00')
             if status[2] <= 0:
                 polling = False
-            time.sleep(0.05)
+            time.sleep(0.00)
 
         return True
 
@@ -186,3 +181,4 @@ class Drive:
         command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'\x00'
         self._serial_handler.send_command(command)
         time.sleep(0.5)  # Ensure there was enough time to turn the wheels (no check)
+        return True
