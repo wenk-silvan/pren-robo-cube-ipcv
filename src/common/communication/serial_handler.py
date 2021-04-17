@@ -54,20 +54,10 @@ class SerialHandler:
         logging.warning("no valid answer received!")
         return False
 
-    def check_status(self, byte_array):
+    def check_status(self, byte_array) -> bytes or False:
         """
-        Asks the STM32 Controller to provide information over different registers.
-        Status of motors, readings of sensors, status overall
+        Same behavior as "send_command" but better for compatibility
         :param byte_array: Defines what registers to read from
         :return: 4 bytes from STM32 Controller or False if checksum was wrong
         """
-        data = byte_array + (sum(byte_array) % 256).to_bytes(1, byteorder='big', signed=False)
-        logging.debug("check status: " + data)
-        self.ser.write(data)
-
-        answer = self.ser.read(4)
-        logging.debug("received answer " + str(answer))
-        if checksum(answer):
-            return answer
-
-        return False
+        return self.send_command(byte_array)
