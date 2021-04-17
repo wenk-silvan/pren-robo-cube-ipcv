@@ -2,7 +2,6 @@
 import time
 import serial
 import logging
-logging.basicConfig(filename='communication.log', filemode='w', level=logging.DEBUG)
 
 
 def checksum(byte_array):
