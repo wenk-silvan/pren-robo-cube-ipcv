@@ -23,6 +23,8 @@ class Serial:
             raise ValueError
         if self.reading_first_byte in (b'\x19', b'\x28', b'\x29'):
             logging.debug("case [\\x19 \\x28' \\x29]")
+            if self.counter < 0:
+                self.counter = 0
             data = self.reading_first_byte + b'\x00' + self.counter.to_bytes(1, byteorder='big', signed=False)
             return data + (sum(data) % 256).to_bytes(1, byteorder='big', signed=False)
 
