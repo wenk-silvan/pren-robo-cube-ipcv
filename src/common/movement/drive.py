@@ -98,6 +98,9 @@ class Drive:
         self._rotate_body(1, angle)
         pass
 
+    def stop(self):
+        self._drive(1, 0)
+
     def _rotate_front_wheels(self, angle):
         servo = b'\x31'
         self._rotate_wheels(servo, angle)
