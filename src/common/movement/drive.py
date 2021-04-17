@@ -135,13 +135,8 @@ class Drive:
                   + distance_cm.to_bytes(1, byteorder='big', signed=False)
         self._serial_handler.send_command(command)
 
-        # Stay in Loop while still driving
-        while self._serial_handler.check_status(b'\x19\x10\x00')[2] > 0.0:
-            time.sleep(0.1)
-            # TODO Pseudocode to functional code
-            '''if (distance sensor reading < 100mm){
-                set drive speed to 1
-            }'''
+        # Check status until driving is over
+        return self._polling_motors()
 
     def _rotate_body(self, direction, distance_cm):
         """
@@ -163,13 +158,22 @@ class Drive:
                   + distance_cm.to_bytes(1, byteorder='big', signed=False)
         self._serial_handler.send_command(command)
 
-        # Stay in Loop while still driving
-        while self._serial_handler.check_status(b'\x19\x15\x00')[2] > 0:
-            time.sleep(0.1)
-            # TODO Pseudocode to functional code
-            '''if (distance sensor reading < 100mm){
-                set drive speed to 1
-            }'''
+        # Check status until driving is over
+        return self._polling_motors()
+
+    def _polling_motors(self):
+        """
+        Used to verify if the 4 main Motors are still running.
+        :return: True once the motors have stopped
+        """
+        polling = True
+        while polling:
+            status = self._serial_handler.check_status(b'\x19\x00\x00')
+            if status[2] <= 0:
+                polling = False
+            time.sleep(0.05)
+
+        return True
 
     def _rotate_wheels(self, servo, angle):
         """
