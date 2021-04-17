@@ -1,4 +1,5 @@
 import logging
+from random import randrange
 
 
 class Serial:
@@ -27,7 +28,7 @@ class Serial:
 
         if self.reading_first_byte == b'\x40':
             logging.debug("case [\\x40]")
-            data = self.reading_first_byte + b'\x00' + self.counter.to_bytes(1, byteorder='big', signed=False)
+            data = self.reading_first_byte + b'\x00' + randrange(10).to_bytes(1, byteorder='big', signed=False)
             return data + (sum(data) % 256).to_bytes(1, byteorder='big', signed=False)
 
         else:
