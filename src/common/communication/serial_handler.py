@@ -20,16 +20,18 @@ class SerialHandler:
     """
     Creates a serial Connection and handles all communication to th STM32 Controller over UART.
     """
-    def __init__(self, tty_device='/dev/ttyS0', baud_rate=115200):
-        """
+    def __init__(self, serial_object=None):
+        """=serial.Serial('/dev/ttyS0', 115200, timeout=1)
         Initializes the Serial connection to the Controller. Depending on the type of Connection (Direct wires or
         though USB, the tty_device might change. tty Devices might be found via "ls /dev/tty*"
-        :param tty_device: Device name of the used Connection
-        :param baud_rate: Communication speed set on both devices
+        :param serial_object: Optional pre initialized serial object
         """
-        self.ser = serial.Serial(tty_device, baud_rate, timeout=1)
+        if serial_object is None:
+            serial_object = serial.Serial('/dev/ttyS0', 115200, timeout=1)
+
+        self.ser = serial_object
         self.ser.flush()
-        logging.info("Serial connection established to {} with baud-rate {}".format(tty_device, baud_rate))
+        logging.info("Serial connection established to {} with baud-rate {}".format(self.ser.name, self.ser.baudrate))
 
     def send_command(self, byte_array):
         """
