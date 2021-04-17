@@ -21,22 +21,22 @@ class TestSensor(TestCase):
         assert self.sensor.left() in range(0, 10)  # 0-9
 
     def test_front_left(self):
-        assert self.sensor.left() in range(0, 10)  # 0-9
+        assert self.sensor.front_left() in range(0, 10)  # 0-9
 
     def test_front_right(self):
-        assert self.sensor.left() in range(0, 10)  # 0-9
+        assert self.sensor.front_right() in range(0, 10)  # 0-9
 
     def test_right(self):
-        assert self.sensor.left() in range(0, 10)  # 0-9
+        assert self.sensor.right() in range(0, 10)  # 0-9
 
     def test_down_front(self):
-        assert self.sensor.left() in range(0, 10)  # 0-9
+        assert self.sensor.down_front() in range(0, 10)  # 0-9
 
     def test_down_center(self):
-        assert self.sensor.left() in range(0, 10)  # 0-9
+        assert self.sensor.down_center() in range(0, 10)  # 0-9
 
     def test_down_tail(self):
-        assert self.sensor.left() in range(0, 10)  # 0-9
+        assert self.sensor.down_tail() in range(0, 10)  # 0-9
 
     def test__read_sensor(self):
-        assert self.sensor.left() in range(0, 10)  # 0-9
+        assert self.sensor._read_sensor(3) in range(0, 10)  # 0-9
