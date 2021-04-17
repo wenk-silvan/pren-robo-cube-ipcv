@@ -109,7 +109,7 @@ class Drive:
         pass
 
     def _rotate_all_wheels(self, angle):
-        servo = b'\30'
+        servo = b'\x30'
         self._rotate_wheels(servo, angle)
         pass
 
@@ -176,6 +176,6 @@ class Drive:
         :return:
         """
         # Send rotation command
-        command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'x00'
+        command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'\x00'
         self._serial_handler.send_command(command)
         time.sleep(0.5)  # Ensure there was enough time to turn the wheels (no check)
