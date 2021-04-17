@@ -1,6 +1,4 @@
-import datetime
 import logging
-import time
 from unittest import TestCase
 
 from src.common.communication.serial_handler import SerialHandler
