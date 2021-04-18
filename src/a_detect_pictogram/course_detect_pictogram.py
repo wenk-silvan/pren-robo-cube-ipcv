@@ -47,7 +47,6 @@ class PictogramDetector:
                         o = objectNames[self.cascades.index(c)]
                         counter += 1
                         stats[o] += 1
-                        logging.debug(o)
         return stats
 
 
