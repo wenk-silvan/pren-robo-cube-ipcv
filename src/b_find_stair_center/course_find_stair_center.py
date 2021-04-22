@@ -12,7 +12,7 @@ from src.b_find_stair_center.stair_detection import StairDetection
 
 def get_configuration():
     config_object = ConfigParser()
-    config_object.read("../../resources/config.ini")
+    config_object.read("resources/config.ini")
     return config_object["B_FIND_STAIR_CENTER"]
 
 
@@ -22,9 +22,9 @@ def run():
     drive = Drive(handler)
     camera = Camera()
 
-    pictogram_detection = ObjectDetection("../../resources/cascades/pictogram/",
+    pictogram_detection = ObjectDetection("resources/cascades/pictogram/",
                                           ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
-    obstacle_detection = ObjectDetection("../../resources/cascades/obstacle/", ["obstacle.xml"])
+    obstacle_detection = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
     stair = StairDetection(conf, ImageProcessing(conf))
     is_centered = False
 
