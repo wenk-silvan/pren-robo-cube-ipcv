@@ -1,9 +1,11 @@
+#!/bin/python3
 import cv2
 import pyttsx3
 import logging
 import time
+import imutils
 
-from src.common.camera.camera import Camera
+from imutils.video.pivideostream import PiVideoStream
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,7 +21,8 @@ class PictogramDetector:
     """
 
     def __init__(self):
-        self.camera = Camera()
+        self.vs = PiVideoStream().start()
+        time.sleep(1)
         self.cascades = []
         for c in paths:  # LOAD THE CLASSIFIERS
             self.cascades.append(cv2.CascadeClassifier(path_to_cascades + c))
@@ -31,22 +34,27 @@ class PictogramDetector:
         Used to detect and count pictograms.
         :return: statistics of detected pictograms
         """
-        time.sleep(1)
         counter = 0
         stats = {'hammer': 0, 'sandwich': 0, 'rule': 0, 'paint': 0, 'pencil': 0}
 
         while counter < objectCount:
-            image = self.camera.snapshot()
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            work = gray
+            frame = self.vs.read()
+            img = imutils.resize(frame)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+            # With all cascades check captured frame
             for c in self.cascades:
-                objects = c.detectMultiScale(work, 1.15, 3)
+                objects = c.detectMultiScale(gray, 1.15, 3)
+
+                # Calculate and check the size of every found object
                 for (x, y, w, h) in objects:
                     area = w * h
                     if area > 400:
                         o = objectNames[self.cascades.index(c)]
                         counter += 1
                         stats[o] += 1
+
+        self.vs.stop()
         return stats
 
 
