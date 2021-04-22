@@ -19,7 +19,7 @@ def run(snapshot):
     image = image_manipulator.transform_to_2d((600, 600))
     finder = Pathfinder(image, conf)
 
-    detector = ObjectDetection("../../resources/cascades/obstacle/", ["obstacle.xml"])
+    detector = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
     # TODO: Adjust detection parameters
     obstacles = detector.detect(image, 5000, 100000, float(conf["detection_obstacle_scale"]),
                                 int(conf["detection_obstacle_neighbours"]))
@@ -44,6 +44,6 @@ def run(snapshot):
 
 
 if __name__ == '__main__':
-    conf = get_configuration("../../resources/config.ini")
+    conf = get_configuration("resources/config.ini")
     image_raw = cv2.imread(conf["img_3_path"])
     run(image_raw)
