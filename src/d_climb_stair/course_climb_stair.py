@@ -8,14 +8,7 @@ from src.common.movement.climb import Climb
 from src.d_climb_stair.climber import Climber
 
 
-def get_configuration():
-    config_object = ConfigParser()
-    config_object.read("../../resources/config.ini")
-    return config_object["D_CLIMB_STAIR"]
-
-
 def get_fake_path():
-    # TODO: Get path from state machine.
     path = Path()
     path.add_instruction(Direction.DRIVE_LEFT, 20)
     path.add_instruction(Direction.DRIVE_RIGHT, 10)
@@ -26,9 +19,8 @@ def get_fake_path():
     return path
 
 
-def run(path: Path):
+def run(conf, path: Path):
     try:
-        conf = get_configuration()
         handler = SerialHandler()
         drive = Drive(handler)
         climb = Climb(handler)
@@ -40,4 +32,6 @@ def run(path: Path):
 
 
 if __name__ == '__main__':
-    run(get_fake_path())
+    conf_parser = ConfigParser()
+    conf_parser.read("resources/config.ini")
+    run(conf_parser["D_CLIMB_STAIR"], get_fake_path())

@@ -1,4 +1,3 @@
-import cv2
 import time
 from configparser import ConfigParser
 
@@ -10,14 +9,7 @@ from src.common.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 
 
-def get_configuration():
-    config_object = ConfigParser()
-    config_object.read("resources/config.ini")
-    return config_object["B_FIND_STAIR_CENTER"]
-
-
-def run():
-    conf = get_configuration()
+def run(conf):
     handler = SerialHandler()
     drive = Drive(handler)
     camera = Camera()
@@ -48,4 +40,6 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    conf_parser = ConfigParser()
+    conf_parser.read("resources/config.ini")
+    run(conf=conf_parser["B_FIND_STAIR_CENTER"])

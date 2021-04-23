@@ -16,7 +16,6 @@ from configparser import ConfigParser
 from src.b_find_stair_center.image_processing import ImageProcessing
 from src.b_find_stair_center.stair_detection import StairDetection
 
-
 PAGE = """\
 <html>
 <head>
@@ -59,7 +58,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 continue
             cv2.line(img, p1, p2, color, 2)
 
-
     def detect_obstacles(self, img):
         detection_obstacle_scale = 2.5
         detection_obstacle_neighbours = 3
@@ -68,22 +66,21 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         violet = (143, 0, 255)
         obstacle_detection.draw(img, obstacles, violet)
 
-
     def detect_pictograms(self, img):
         detection_pictogram_scale = 1.2
         detection_pictogram_neighbours = 3
-        pictogram_detection = ObjectDetection("resources/cascades/pictogram/", ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
-        pictograms = pictogram_detection.detect(img, 1000, 15000, detection_pictogram_scale, detection_pictogram_neighbours)
+        pictogram_detection = ObjectDetection("resources/cascades/pictogram/",
+                                              ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
+        pictograms = pictogram_detection.detect(img, 1000, 15000, detection_pictogram_scale,
+                                                detection_pictogram_neighbours)
         yellow = (255, 255, 0)
         pictogram_detection.draw(img, pictograms, yellow)
-
 
     def detect_stair(self, conf, img):
         stair = StairDetection(conf, ImageProcessing(conf))
         lines_vertical, lines_horizontal = stair.detect_lines(img)
         self.draw_lines(lines_horizontal, img, (255, 0, 0))
         self.draw_lines(lines_vertical, img, (0, 255, 0))
-
 
     def process_image(self, frame):
         config_object = ConfigParser()
@@ -143,23 +140,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
-
-
-def start():
-    try:
-        address = ('', 8000)
-        server = StreamingServer(address, StreamingHandler)
-        server.serve_forever()
-
-        pictogram = course_detect_pictogram.run()
-        snapshot = course_find_stair_center.run()
-        path: Path = course_pathfinding.run(snapshot=snapshot)
-        course_climb_stair.run(path=path)
-        success = course_find_pictogram.run(pictogram=pictogram, position_robot=path.get_final_position())
-        if success:
-            print("YAY!")
-    except Exception as e:
-        logging.warning("Unexpected error: " + str(e))
 
 
 with picamera.PiCamera(resolution='640x480', framerate=24) as camera:

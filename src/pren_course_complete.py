@@ -4,14 +4,19 @@ from src.c_pathfinding import course_pathfinding
 from src.common.models.path import Path
 from src.d_climb_stair import course_climb_stair
 from src.e_find_pictogram import course_find_pictogram
+from configparser import ConfigParser
 
 
 def start():
+    conf_parser = ConfigParser()
+    conf_parser.read("resources/config.ini")
+
     pictogram = course_detect_pictogram.run()
-    snapshot = course_find_stair_center.run()
-    path: Path = course_pathfinding.run(snapshot=snapshot)
-    course_climb_stair.run(path=path)
+    snapshot = course_find_stair_center.run(conf=conf_parser["B_FIND_STAIR_CENTER"])
+    path: Path = course_pathfinding.run(conf=conf_parser["C_PATHFINDING"], snapshot=snapshot)
+    course_climb_stair.run(conf=conf_parser["D_CLIMB_STAIR"], path=path)
     success = course_find_pictogram.run(pictogram=pictogram, position_robot=path.get_final_position())
+
     if success:
         print("YAY!")
 
