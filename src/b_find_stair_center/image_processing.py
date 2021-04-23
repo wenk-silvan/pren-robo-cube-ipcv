@@ -109,6 +109,8 @@ class ImageProcessing:
             minLineLength=min_line_length,
             maxLineGap=max_line_gap
         )
+        if detected is None:
+            return []
         return [Line(Point(l[0][0], l[0][1]), Point(l[0][2], l[0][3])) for l in detected]
 
     @staticmethod
