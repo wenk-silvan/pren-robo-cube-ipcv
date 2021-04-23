@@ -2,6 +2,7 @@ from src.common.communication.serial_handler import SerialHandler
 from src.common.models.instruction import Instruction
 from src.common.movement.direction import Direction
 from src.common.movement.drive import Drive
+import logging
 
 
 def get_instruction(position_pictogram: int, position_robot: int):
@@ -25,7 +26,7 @@ def get_position_pictogram(pictogram):
     elif pictogram == "pencil":
         return 50
     else:
-        raise Exception("The pictogram '{}' must be in {}".format(pictogram, pictograms))
+        raise RuntimeError("The pictogram '{}' must be in {}".format(pictogram, pictograms))
 
 
 def run(pictogram, position_robot):
@@ -39,7 +40,7 @@ def run(pictogram, position_robot):
         drive.forward(20)
         return True
     except RuntimeError as e:
-        print("Error in e_find_pictogram:\n", e)
+        logging.error("Error in e_find_pictogram:\n", e)
         return False
 
 

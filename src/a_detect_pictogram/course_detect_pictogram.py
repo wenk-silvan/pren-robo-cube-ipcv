@@ -7,8 +7,6 @@ import imutils
 
 from imutils.video.pivideostream import PiVideoStream
 
-logging.basicConfig(level=logging.INFO)
-
 path_to_cascades = "resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
@@ -77,7 +75,7 @@ def run():
         t2s.runAndWait()
         return result
     except RuntimeError as e:
-        print("Error in a_detect_pictogram:\n", e)
+        logging.error("Error in a_detect_pictogram:\n", e)
 
 
 if __name__ == '__main__':

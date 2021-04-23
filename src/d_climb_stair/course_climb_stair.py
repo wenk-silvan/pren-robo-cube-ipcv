@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-
+import logging
 from src.common.communication.serial_handler import SerialHandler
 from src.common.models.path import Path
 from src.common.movement.direction import Direction
@@ -26,9 +26,9 @@ def run(conf, path: Path):
         climb = Climb(handler)
         climber = Climber(conf, drive, climb)
         result = climber.move(path)
-        print("Clearing the stair was " + ("successful." if result else "unsuccessful."))
+        logging.info("Clearing the stair was " + ("successful." if result else "unsuccessful."))
     except RuntimeError as e:
-        print("Error in d_climb_stair:\n", e)
+        logging.error("Error in d_climb_stair:\n", e)
 
 
 if __name__ == '__main__':

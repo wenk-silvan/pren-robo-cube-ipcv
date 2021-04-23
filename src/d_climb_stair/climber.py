@@ -1,3 +1,5 @@
+import logging
+
 from src.common.models.path import Path
 from src.common.movement.climb import Climb
 from src.common.movement.drive import Drive
@@ -19,8 +21,10 @@ class Climber:
         :return: True or False whether the path could be cleared.
         """
         try:
+            logging.info("Move until sensor stops")
             self.drive.forward_to_object()
             for instruction in path.instructions:
+                logging.info("Move {0} mm in direction {1}", instruction.distance, instruction.direction)
                 self.drive.move(instruction.direction, instruction.distance)
                 self._step_up()
             return True
@@ -29,9 +33,10 @@ class Climber:
             return False
 
     def _step_down(self):
-        pass  # This feature is not implemented hardware-wise
+        raise NotImplementedError
 
     def _step_up(self):
+        logging.info("Try to climb next step")
         self.drive.forward(0)  # Make sure wheels are angled 0 degrees.
         self.climb.head_up(self.duration)
         self.drive.forward(self.forward_head_mm)
@@ -39,3 +44,4 @@ class Climber:
         self.drive.forward(self.forward_body_mm)
         self.climb.body_up(self.duration)
         self.drive.forward(self.forward_tail_mm)
+        logging.info("Step climbed successfully.")

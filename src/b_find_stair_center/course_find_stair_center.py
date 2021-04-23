@@ -1,6 +1,6 @@
 import time
 from configparser import ConfigParser
-
+import logging
 from src.common.camera.camera import Camera
 from src.common.communication.serial_handler import SerialHandler
 from src.b_find_stair_center.image_processing import ImageProcessing
@@ -24,9 +24,10 @@ def run(conf):
         while not is_centered:
             is_centered = try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, stair_detection)
             time.sleep(2)
+        logging.info("Robot is centered, take snapshot.")
         return camera.snapshot()
     except RuntimeError as e:
-        print("Error in b_find_stair_center:\n", e)
+        logging.error("Error in b_find_stair_center:\n", e)
 
 
 def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, stair_detection):
@@ -36,12 +37,14 @@ def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, 
                                             int(conf["detection_pictogram_neighbours"]))
     obstacles = obstacle_detection.detect(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
                                           int(conf["detection_obstacle_neighbours"]))
-
     lines_vertical, lines_horizontal = stair_detection.detect_lines(image)
     direction, value, done = stair_detection.get_next_movement(
         image, lines_vertical, lines_horizontal, pictograms, len(obstacles) > 0)
 
-    print("Next move: {} with a distance of {}".format(direction, value))
+    logging.info("Try to center robot, detected pictograms: {0}, obstacles: {1}, vert_lines: {2}, hor_lines: {3}\n"
+                  "Next move is {4} with a distance of {5} mm.",
+                  len(pictograms), len(obstacles), len(lines_vertical), len(lines_horizontal), direction, value)
+
     drive.move(direction, value)
     return done
 

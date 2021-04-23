@@ -5,9 +5,11 @@ from src.common.models.path import Path
 from src.d_climb_stair import course_climb_stair
 from src.e_find_pictogram import course_find_pictogram
 from configparser import ConfigParser
+import logging
 
 
 def start():
+    logging.basicConfig(level=logging.DEBUG)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
 

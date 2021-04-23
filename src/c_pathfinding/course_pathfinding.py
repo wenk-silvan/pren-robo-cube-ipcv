@@ -4,6 +4,7 @@ from src.c_pathfinding.pathfinder import Pathfinder
 from src.common.image_manipulator import ImageManipulator
 from src.common.models.obstacle import Obstacle
 from src.common.object_detection import ObjectDetection
+import logging
 
 
 def run(conf, snapshot):
@@ -16,20 +17,20 @@ def run(conf, snapshot):
         detector = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
         obstacles = detector.detect(image, 5000, 100000, float(conf["detection_obstacle_scale"]),
                                     int(conf["detection_obstacle_neighbours"]))
-        detector.draw(image, obstacles, (0, 255, 0))
         stair_with_objects = finder.create_stair_with_objects([Obstacle(o[0], o[1]) for o in obstacles])
         stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
         paths = finder.calculate_path(stair_with_areas)
         path = Pathfinder.determine_best_path(paths)
-        print("====== All paths: ======")
-        for p in paths:
-            print(p.to_string())
 
-        print("====== Fastest path: ======")
-        print(path.to_string())
+        message = "====== All paths: ======\n"
+        for p in paths:
+            message += p.to_string()
+        logging.info(message)
+
+        logging.info("====== Fastest path: ======\n", path.to_string())
         return path
     except RuntimeError as e:
-        print("Error in c_pathfinding:\n", e)
+        logging.error("Error in c_pathfinding:\n", e)
 
 
 if __name__ == '__main__':
