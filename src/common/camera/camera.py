@@ -1,5 +1,4 @@
 import time
-
 import imutils
 from imutils.video.pivideostream import PiVideoStream
 

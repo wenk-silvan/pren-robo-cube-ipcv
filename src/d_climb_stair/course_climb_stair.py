@@ -27,8 +27,8 @@ def run(conf, path: Path):
         climber = Climber(conf, drive, climb)
         result = climber.move(path)
         print("Clearing the stair was " + ("successful." if result else "unsuccessful."))
-    except Exception:
-        print("Error in course_climb_stair")
+    except RuntimeError as e:
+        print("Error in d_climb_stair:\n", e)
 
 
 if __name__ == '__main__':

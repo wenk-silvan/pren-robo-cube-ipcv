@@ -39,7 +39,7 @@ class Drive:
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
         # TODO: Drive until sensor hits.
-        return False   # Fail the test
+        raise NotImplementedError
 
     def left(self, distance):
         """

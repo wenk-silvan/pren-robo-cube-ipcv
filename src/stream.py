@@ -11,7 +11,6 @@ from threading import Condition
 from http import server
 from src.common.object_detection import ObjectDetection
 import picamera
-from threading import Thread
 from configparser import ConfigParser
 from src.b_find_stair_center.image_processing import ImageProcessing
 from src.b_find_stair_center.stair_detection import StairDetection

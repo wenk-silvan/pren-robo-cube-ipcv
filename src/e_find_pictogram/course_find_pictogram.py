@@ -35,10 +35,11 @@ def run(pictogram, position_robot):
         position_pictogram = get_position_pictogram(pictogram)
         instruction: Instruction = get_instruction(position_pictogram, position_robot)
         drive.move(instruction.direction, instruction.distance)
+        # TODO: Adjust distance
         drive.forward(20)
         return True
-    except Exception:
-        print("Error in course_find_pictogram")
+    except RuntimeError as e:
+        print("Error in e_find_pictogram:\n", e)
         return False
 
 

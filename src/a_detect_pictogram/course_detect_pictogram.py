@@ -63,18 +63,21 @@ def run():
     Runs the PictogramDetector.
     :return: the pictogram which had the most hits.
     """
-    detector = PictogramDetector()
-    stats = detector.detect()
-    logging.debug(stats)
-    result = max(stats, key=stats.get)
+    try:
+        detector = PictogramDetector()
+        stats = detector.detect()
+        logging.debug(stats)
+        result = max(stats, key=stats.get)
 
-    t2s = pyttsx3.init()
-    t2s.setProperty('voice', t2s.getProperty('voices'))
-    comb = 'some' if result is 'paint' else 'a'
-    t2s.say("I am looking for %s %s" % (comb, result))
-    logging.info("detected: %s", result)
-    t2s.runAndWait()
-    return result
+        t2s = pyttsx3.init()
+        t2s.setProperty('voice', t2s.getProperty('voices'))
+        comb = 'some' if result is 'paint' else 'a'
+        t2s.say("I am looking for %s %s" % (comb, result))
+        logging.info("detected: %s", result)
+        t2s.runAndWait()
+        return result
+    except RuntimeError as e:
+        print("Error in a_detect_pictogram:\n", e)
 
 
 if __name__ == '__main__':
