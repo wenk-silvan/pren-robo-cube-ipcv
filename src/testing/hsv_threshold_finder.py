@@ -1,15 +1,19 @@
 from __future__ import print_function
+
+import cv2
 import cv2 as cv
 import argparse
 
+from src.common.image_manipulator import ImageManipulator
+
 max_value = 255
 max_value_H = 360 // 2
-low_H = 0
-low_S = 0
-low_V = 0
-high_H = max_value_H
-high_S = max_value
-high_V = max_value
+low_H = 10
+low_S = 100
+low_V = 97
+high_H = 20
+high_S = 222
+high_V = 233
 window_capture_name = 'Video Capture'
 window_detection_name = 'Object Detection'
 low_H_name = 'Low H'
@@ -81,24 +85,16 @@ cv.createTrackbar(high_S_name, window_detection_name, high_S, max_value, on_high
 cv.createTrackbar(low_V_name, window_detection_name, low_V, max_value, on_low_V_thresh_trackbar)
 cv.createTrackbar(high_V_name, window_detection_name, high_V, max_value, on_high_V_thresh_trackbar)
 
-image = cv.imread("../../images/stair/back_center/img004.jpg")
-r = 600 / image.shape[1]
-dim = (600, int(image.shape[0] * r))
-image = cv.resize(image, dim, interpolation=cv.INTER_AREA)
+img = cv2.resize(cv2.imread("../../images/stair/pathfinding/outdoor.jpg"), (1280, 960))
+image_manipulator = ImageManipulator(img)
+image = image_manipulator.transform_to_2d((600, 600))
 
 while True:
-
-    # ret, frame = cap.read()
-    # if frame is None:
-    #     break
     frame = image.copy()
-
     frame_HSV = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
     frame_threshold = cv.inRange(frame_HSV, (low_H, low_S, low_V), (high_H, high_S, high_V))
-
     cv.imshow(window_capture_name, frame)
     cv.imshow(window_detection_name, frame_threshold)
-
     key = cv.waitKey(30)
     if key == ord('q') or key == 27:
         break
