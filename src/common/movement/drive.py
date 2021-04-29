@@ -18,7 +18,7 @@ class Drive:
         Triggers the robot to drive backward by first rotating all wheels to 0 degrees and then driving backward.
         :param distance: The distance in millimeters.
         """
-        logging.info("Drive: backward {} mm", distance)
+        logging.info("Drive: backward %s mm", distance)
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
@@ -29,7 +29,7 @@ class Drive:
         Triggers the robot to drive forward by first rotating all wheels to 0 degrees and then driving forward.
         :param distance: The distance in millimeters.
         """
-        logging.info("Drive: forward {} mm", distance)
+        logging.info("Drive: forward %s mm", distance)
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
@@ -41,7 +41,7 @@ class Drive:
         Triggers the robot to drive forward until the sensor sends a stop signal, objects will be closer to camera.
         :param threshold: The threshold in mm to approach object
         """
-        logging.info("Drive: forward to object until {} mm away", threshold)
+        logging.info("Drive: forward to object until %s mm away", threshold)
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
@@ -52,7 +52,7 @@ class Drive:
         Triggers the robot to drive to the left by first rotating all wheels to 90 degrees and then driving backward.
         :param distance: The distance in millimeters.
         """
-        logging.info("Drive: left {} mm", distance)
+        logging.info("Drive: left %s mm", distance)
         if self.wheels_orientation == WheelState.STRAIGHT:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
@@ -83,7 +83,7 @@ class Drive:
         Triggers the robot to drive to the right by first rotating all wheels to 90 degrees and then driving forward.
         :param distance: The distance in millimeters.
         """
-        logging.info("Drive: right {} mm", distance)
+        logging.info("Drive: right %s mm", distance)
         if self.wheels_orientation == WheelState.STRAIGHT:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
@@ -94,7 +94,7 @@ class Drive:
         Triggers the robot to rotate to the left, around his own axis.
         :param angle: The angle in degrees.
         """
-        logging.info("Rotate: body left {} to degree", angle)
+        logging.info("Rotate: body left %s to degree", angle)
         return self._rotate_body(-1, angle)
 
     def rotate_body_right(self, angle):
@@ -102,7 +102,7 @@ class Drive:
         Triggers the robot to rotate to the right, around his own axis.
         :param angle: The angle in degrees.
         """
-        logging.info("Rotate: body right {} to degree", angle)
+        logging.info("Rotate: body right %s to degree", angle)
         return self._rotate_body(1, angle)
 
     def stop(self):
@@ -111,17 +111,17 @@ class Drive:
 
     def _rotate_front_wheels(self, angle):
         servo = b'\x31'
-        logging.debug("Rotate front wheels to {} degree", angle)
+        logging.debug("Rotate front wheels to %s degree", angle)
         return self._rotate_wheels(servo, angle)
 
     def _rotate_back_wheels(self, angle):
         servo = b'\x32'
-        logging.debug("Rotate back wheels to {} degree", angle)
+        logging.debug("Rotate back wheels to %s degree", angle)
         return self._rotate_wheels(servo, angle)
 
     def _rotate_all_wheels(self, angle):
         servo = b'\x30'
-        logging.debug("Rotate all wheels to {} degree", angle)
+        logging.debug("Rotate all wheels to %s degree", angle)
         return self._rotate_wheels(servo, angle)
 
     def _drive_distance(self, direction, distance_cm):
@@ -185,7 +185,7 @@ class Drive:
             status = self._serial_handler.check_status(b'\x40\x00\x00')
             if status[2] <= 0:
                 polling = False
-            time.sleep(0.05)
+            time.sleep(0.005)
 
         return True
 
@@ -201,7 +201,7 @@ class Drive:
             distances.append(self._sensors.front_left())
             if min(distances) <= threshold:
                 polling = False
-            time.sleep(0.05)
+            time.sleep(0.005)
 
         return True
 
