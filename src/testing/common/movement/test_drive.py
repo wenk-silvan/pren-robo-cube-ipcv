@@ -56,7 +56,7 @@ class TestDrive(TestCase):
         assert self.drive._rotate_all_wheels(30) is True
 
     def test__drive(self):
-        assert self.drive._drive(2, 12) is True
+        assert self.drive._drive_distance(2, 12) is True
 
     def test__rotate_body(self):
         assert self.drive._rotate_body(2, 30) is True

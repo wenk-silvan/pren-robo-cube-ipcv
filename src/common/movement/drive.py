@@ -2,12 +2,14 @@ import logging
 import time
 
 from src.common.movement.direction import Direction
+from src.common.movement.sensors import Sensor
 from src.common.movement.wheel_state import WheelState
 
 
 class Drive:
     def __init__(self, serial_handler):
         self._serial_handler = serial_handler
+        self._sensors = Sensor(self._serial_handler)
         self.wheels_orientation = WheelState.STRAIGHT
         self._rotate_all_wheels(0)
 
@@ -20,7 +22,7 @@ class Drive:
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
-        return self._drive(-2, distance)
+        return self._drive_distance(-2, distance)
 
     def forward(self, distance):
         """
@@ -31,19 +33,19 @@ class Drive:
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
-        return self._drive(2, distance)
+        return self._drive_distance(2, distance)
         pass
 
-    def forward_to_object(self, distance):
+    def forward_to_object(self, threshold):
         """
         Triggers the robot to drive forward until the sensor sends a stop signal, objects will be closer to camera.
-        :param distance: The distance in millimeters the object should be away.
+        :param threshold: The threshold in mm to approach object
         """
-        logging.info("Drive: forward to object until {} mm away", distance)
+        logging.info("Drive: forward to object until {} mm away", threshold)
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
-        # TODO: Drive until sensor hits.
-        raise NotImplementedError
+            self.wheels_orientation = WheelState.STRAIGHT
+        return self._drive_sensors(1, threshold)
 
     def left(self, distance):
         """
@@ -54,7 +56,7 @@ class Drive:
         if self.wheels_orientation == WheelState.STRAIGHT:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
-        return self._drive(-2, distance)
+        return self._drive_distance(-2, distance)
 
     def move(self, direction, value):
         """
@@ -85,7 +87,7 @@ class Drive:
         if self.wheels_orientation == WheelState.STRAIGHT:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
-        return self._drive(2, distance)
+        return self._drive_distance(2, distance)
 
     def rotate_body_left(self, angle):
         """
@@ -105,7 +107,7 @@ class Drive:
 
     def stop(self):
         logging.info("Drive: Stop driving now")
-        return self._drive(1, 0)
+        return self._drive_distance(1, 0)
 
     def _rotate_front_wheels(self, angle):
         servo = b'\x31'
@@ -121,6 +123,14 @@ class Drive:
         servo = b'\x30'
         logging.debug("Rotate all wheels to {} degree", angle)
         return self._rotate_wheels(servo, angle)
+
+    def _drive_distance(self, direction, distance_cm):
+        self._drive(direction, distance_cm)
+        return self._polling_motors()
+
+    def _drive_sensors(self, direction, threshold):
+        self._drive(direction, 200)
+        return self._polling_sensors(threshold)
 
     def _drive(self, direction, distance_cm):
         """
@@ -141,9 +151,6 @@ class Drive:
         command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True)\
                   + distance_cm.to_bytes(1, byteorder='big', signed=False)
         self._serial_handler.send_command(command)
-
-        # Check status until driving is over
-        return self._polling_motors()
 
     def _rotate_body(self, direction, distance_cm):
         """
@@ -175,10 +182,26 @@ class Drive:
         """
         polling = True
         while polling:
-            status = self._serial_handler.check_status(b'\x19\x00\x00')
+            status = self._serial_handler.check_status(b'\x40\x00\x00')
             if status[2] <= 0:
                 polling = False
-            time.sleep(0.00)
+            time.sleep(0.05)
+
+        return True
+
+    def _polling_sensors(self, threshold):
+        """
+        Used to check the distance in a given direction
+        :return: True once the motors have stopped
+        """
+        distances = []
+        polling = True
+        while polling:
+            distances.append(self._sensors.front_right())
+            distances.append(self._sensors.front_left())
+            if min(distances) <= threshold:
+                polling = False
+            time.sleep(0.05)
 
         return True
 
