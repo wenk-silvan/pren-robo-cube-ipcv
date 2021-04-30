@@ -1,6 +1,7 @@
 import time
 import imutils
 from imutils.video.pivideostream import PiVideoStream
+import cv2
 
 
 class Camera:
@@ -18,4 +19,5 @@ class Camera:
         :return:
         """
         frame = self.stream.read()
-        return imutils.resize(image=frame, width=1280, height=960)
+        flipped_frame = cv2.flip(frame, 0) # flip vertically
+        return imutils.resize(image=flipped_frame, width=1280, height=960)
