@@ -6,6 +6,8 @@ from src.common.models.obstacle import Obstacle
 from src.common.object_detection import ObjectDetection
 import logging
 
+from src.common.obstacle_detection_yolo import ObstacleDetectionYolo
+
 
 def run(conf, snapshot):
     try:
@@ -17,6 +19,10 @@ def run(conf, snapshot):
         detector = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
         obstacles = detector.detect(image, 5000, 100000, float(conf["detection_obstacle_scale"]),
                                     int(conf["detection_obstacle_neighbours"]))
+
+        # detector = ObstacleDetectionYolo(conf)
+        # obstacles = detector.detect(image)
+
         stair_with_objects = finder.create_stair_with_objects([Obstacle(o[0], o[1]) for o in obstacles])
         stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
         paths = finder.calculate_path(stair_with_areas)
