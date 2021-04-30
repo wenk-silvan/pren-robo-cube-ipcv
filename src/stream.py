@@ -89,6 +89,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         cv2.CV_LOAD_IMAGE_COLOR = 1
         npframe = np.fromstring(frame, dtype=np.uint8)
         image = cv2.imdecode(npframe, cv2.CV_LOAD_IMAGE_COLOR)
+        image = cv2.flip(image, 0)
         self.detect_pictograms(image)
         self.detect_obstacles(image)
         self.detect_stair(conf, image)
