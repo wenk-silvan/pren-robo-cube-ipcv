@@ -36,7 +36,7 @@ class PictogramDetector:
         stats = {'hammer': 0, 'sandwich': 0, 'rule': 0, 'paint': 0, 'pencil': 0}
 
         while counter < objectCount:
-            frame = self.vs.read()
+            frame = cv2.flip(self.vs.read(), 0)
             img = imutils.resize(frame)
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 

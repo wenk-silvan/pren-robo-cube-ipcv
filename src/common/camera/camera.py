@@ -19,5 +19,5 @@ class Camera:
         :return:
         """
         frame = self.stream.read()
-        flipped_frame = cv2.flip(frame, 0) # flip vertically
+        flipped_frame = cv2.flip(frame, 0)  # flip vertically
         return imutils.resize(image=flipped_frame, width=1280, height=960)
