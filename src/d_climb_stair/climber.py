@@ -9,10 +9,10 @@ class Climber:
     def __init__(self, conf, drive: Drive, climb: Climb):
         self.drive = drive
         self.climb = climb
-        self.duration = int(conf["step_height"]) / 2  # TODO: Use accurate duration
-        self.forward_head_mm = int(conf["forward_head_mm"])
-        self.forward_body_mm = int(conf["forward_body_mm"])
-        self.forward_tail_mm = int(conf["forward_tail_mm"])
+        self.duration = int(conf["stair_step_height_mm"]) / 2  # TODO: Use accurate duration
+        self.forward_head_mm = int(conf["climb_forward_head_mm"])
+        self.forward_body_mm = int(conf["climb_forward_body_mm"])
+        self.forward_tail_mm = int(conf["climb_forward_tail_mm"])
 
     def move(self, path: Path) -> object:
         """
@@ -22,7 +22,7 @@ class Climber:
         """
         try:
             logging.info("Move until sensor stops")
-            self.drive.forward_to_object()
+            self.drive.forward_to_object(self.forward_head_mm + 2)
             for instruction in path.instructions:
                 logging.info("Move {0} mm in direction {1}", instruction.distance, instruction.direction)
                 self.drive.move(instruction.direction, instruction.distance)
