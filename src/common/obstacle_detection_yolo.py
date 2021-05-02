@@ -10,6 +10,7 @@ class ObstacleDetectionYolo:
         yolo_weights = conf["detection_yolo_weights"]
         self.classes = ["brick"]
         self.net = cv2.dnn.readNetFromDarknet(yolo_config, yolo_weights)
+        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 
     def detect(self, image):
         height, width, _ = image.shape
@@ -18,6 +19,7 @@ class ObstacleDetectionYolo:
         output_layers_name = self.net.getUnconnectedOutLayersNames()
         layer_outputs = self.net.forward(output_layers_name)
         obstacles = []
+
         for output in layer_outputs:
             for detection in output:
                 score = detection[5:]
@@ -32,3 +34,6 @@ class ObstacleDetectionYolo:
                     y = int(center_y - h / 2)
                     obstacles.append((Point(x, y), Point(x + w, y + h)))
         return obstacles
+
+    def draw(self, img, objects, color):
+        [cv2.rectangle(img, (p1.x, p1.y), (p2.x, p2.y), color, 2) for (p1, p2) in objects]
