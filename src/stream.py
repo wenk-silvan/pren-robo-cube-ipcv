@@ -66,11 +66,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         obstacle_detection.draw(img, obstacles, violet)
 
     def detect_pictograms(self, img):
-        detection_pictogram_scale = 1.2
+        detection_pictogram_scale = 1.15
         detection_pictogram_neighbours = 3
         pictogram_detection = ObjectDetection("resources/cascades/pictogram/",
                                               ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
-        pictograms = pictogram_detection.detect(img, 1000, 15000, detection_pictogram_scale,
+        pictograms = pictogram_detection.detect(img, 400, 15000, detection_pictogram_scale,
                                                 detection_pictogram_neighbours)
         yellow = (255, 255, 0)
         pictogram_detection.draw(img, pictograms, yellow)

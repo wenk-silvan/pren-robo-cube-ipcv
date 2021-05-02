@@ -10,7 +10,7 @@ from imutils.video.pivideostream import PiVideoStream
 path_to_cascades = "resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
-objectCount = 21  # how many objects to count for recognition
+objectCount = 3  # how many objects to count for recognition
 
 
 class PictogramDetector:
