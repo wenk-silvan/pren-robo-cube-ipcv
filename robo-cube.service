@@ -1,0 +1,10 @@
+[Unit]
+Description=Runs the full course for the robo-cube.
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/bin/pren-robo-cube-ipcv/src/pren_course_complete.py
+StandardInput=tty-force
+
+[Install]
+WantedBy=multi-user.target
