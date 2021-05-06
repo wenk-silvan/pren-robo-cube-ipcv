@@ -41,9 +41,9 @@ def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, 
     direction, value, done = stair_detection.get_next_movement(
         image, lines_vertical, lines_horizontal, pictograms, len(obstacles) > 0)
 
-    logging.info("Try to center robot, detected pictograms: {0}, obstacles: {1}, vert_lines: {2}, hor_lines: {3}\n"
-                  "Next move is {4} with a distance of {5} mm.",
-                  len(pictograms), len(obstacles), len(lines_vertical), len(lines_horizontal), direction, value)
+    logging.info("Try to center robot, detected pictograms: %s, obstacles: %s, vert_lines: %s, hor_lines: %s\n"
+                 "Next move is %s with a distance of %s mm.",
+                 len(pictograms), len(obstacles), len(lines_vertical), len(lines_horizontal), direction, value)
 
     drive.move(direction, value)
     return done

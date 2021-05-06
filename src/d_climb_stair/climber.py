@@ -24,7 +24,7 @@ class Climber:
             logging.info("Move until sensor stops")
             self.drive.forward_to_object(self.forward_head_mm + 2)
             for instruction in path.instructions:
-                logging.info("Move {0} mm in direction {1}", instruction.distance, instruction.direction)
+                logging.info("Move %s mm in direction %s", instruction.distance, instruction.direction)
                 self.drive.move(instruction.direction, instruction.distance)
                 self._step_up()
             return True
