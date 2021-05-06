@@ -50,6 +50,7 @@ def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, 
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
     run(conf=conf_parser["B_FIND_STAIR_CENTER"])

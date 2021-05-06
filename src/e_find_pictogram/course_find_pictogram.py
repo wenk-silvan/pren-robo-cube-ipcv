@@ -45,4 +45,5 @@ def run(pictogram, position_robot):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     run("hammer", 60)

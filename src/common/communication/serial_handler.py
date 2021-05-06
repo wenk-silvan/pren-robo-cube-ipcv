@@ -39,7 +39,7 @@ class SerialHandler:
         """
         data = byte_array + (sum(byte_array) % 256).to_bytes(1, byteorder='big', signed=False)
         logging.debug("sending command: " + str(data))
-
+        
         # Try 5 times to get a valid answer (checksum and not "nok") before sending the answer back to the caller
         for i in range(5):
             self.ser.write(data)

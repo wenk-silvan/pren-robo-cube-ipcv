@@ -40,6 +40,7 @@ def run(conf, snapshot):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
     conf = conf_parser["C_PATHFINDING"]

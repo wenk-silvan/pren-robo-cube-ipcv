@@ -146,7 +146,7 @@ class Drive:
             logging.warning("%i ")
             raise ValueError
 
-        logging.debug("Drive direction: {0} for {1} mm", direction, distance_cm)
+        logging.debug("Drive direction: %s for %s mm", direction, distance_cm)
         # Actual driving
         command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True)\
                   + distance_cm.to_bytes(1, byteorder='big', signed=False)

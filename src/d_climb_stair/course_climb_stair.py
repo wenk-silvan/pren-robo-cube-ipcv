@@ -32,6 +32,7 @@ def run(conf, path: Path):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
     run(conf_parser["D_CLIMB_STAIR"], get_fake_path())
