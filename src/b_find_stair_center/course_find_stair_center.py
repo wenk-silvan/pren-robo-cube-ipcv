@@ -9,10 +9,9 @@ from src.common.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 
 
-def run(conf):
+def run(conf, serial: SerialHandler):
     try:
-        handler = SerialHandler()
-        drive = Drive(handler)
+        drive = Drive(serial)
         camera = Camera()
 
         pictogram_detection = ObjectDetection("resources/cascades/pictogram/",
@@ -53,4 +52,4 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
-    run(conf=conf_parser["B_FIND_STAIR_CENTER"])
+    run(conf=conf_parser["B_FIND_STAIR_CENTER"], serial=SerialHandler())

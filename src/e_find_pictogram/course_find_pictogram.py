@@ -29,10 +29,9 @@ def get_position_pictogram(pictogram):
         raise RuntimeError("The pictogram '{}' must be in {}".format(pictogram, pictograms))
 
 
-def run(pictogram, position_robot):
+def run(pictogram, position_robot, serial: SerialHandler):
     try:
-        handler = SerialHandler()
-        drive = Drive(handler)
+        drive = Drive(serial)
         position_pictogram = get_position_pictogram(pictogram)
         instruction: Instruction = get_instruction(position_pictogram, position_robot)
         drive.move(instruction.direction, instruction.distance)
@@ -46,4 +45,4 @@ def run(pictogram, position_robot):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    run("hammer", 60)
+    run("hammer", 60, SerialHandler())
