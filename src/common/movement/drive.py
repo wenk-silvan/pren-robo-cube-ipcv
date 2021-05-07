@@ -182,10 +182,10 @@ class Drive:
         """
         polling = True
         while polling:
-            status = self._serial_handler.check_status(b'\x40\x00\x00')
+            status = self._serial_handler.check_status(b'\x19\x00\x00')
             if status[2] <= 0:
                 polling = False
-            time.sleep(0.005)
+            time.sleep(0.05)
 
         return True
 
