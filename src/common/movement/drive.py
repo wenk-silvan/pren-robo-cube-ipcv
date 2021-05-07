@@ -4,12 +4,14 @@ import time
 from src.common.movement.direction import Direction
 from src.common.movement.sensors import Sensor
 from src.common.movement.wheel_state import WheelState
+from src.common.movement.climb import Climb
 
 
 class Drive:
     def __init__(self, serial_handler):
         self._serial_handler = serial_handler
         self._sensors = Sensor(self._serial_handler)
+        self._climb = Climb(self._serial_handler)
         self.wheels_orientation = WheelState.STRAIGHT
         self._rotate_all_wheels(0)
 
@@ -212,8 +214,12 @@ class Drive:
         :param angle: [-45 to 90] the Angle the Servos should turn.
         :return:
         """
+        # Since the servos are not strong enough we need to lift the tires off the ground in order to turn them...
+        self._climb.body_down(5)
+
         # Send rotation command
         command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'\x00'
         self._serial_handler.send_command(command)
         time.sleep(0.5)  # Ensure there was enough time to turn the wheels (no check)
+        self._climb.body_up(5)
         return True
