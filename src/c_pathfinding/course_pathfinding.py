@@ -33,10 +33,10 @@ def run(conf, snapshot):
             message += p.to_string()
         logging.info(message)
 
-        logging.info("====== Fastest path: ======\n", path.to_string())
+        logging.info("====== Fastest path: ======\n%s", path.to_string())
         return path
     except RuntimeError as e:
-        logging.error("Error in c_pathfinding:\n", e)
+        logging.error("Error in c_pathfinding:\n%s", e)
 
 
 if __name__ == '__main__':

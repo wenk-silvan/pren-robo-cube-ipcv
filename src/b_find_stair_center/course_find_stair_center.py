@@ -1,6 +1,7 @@
 import time
 from configparser import ConfigParser
 import logging
+
 from src.common.camera.camera import Camera
 from src.common.communication.serial_handler import SerialHandler
 from src.b_find_stair_center.image_processing import ImageProcessing
@@ -9,10 +10,9 @@ from src.common.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 
 
-def run(conf, serial: SerialHandler):
+def run(conf, serial: SerialHandler, camera):
     try:
         drive = Drive(serial)
-        camera = Camera()
 
         pictogram_detection = ObjectDetection("resources/cascades/pictogram/",
                                               ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
@@ -52,4 +52,4 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
-    run(conf=conf_parser["B_FIND_STAIR_CENTER"], serial=SerialHandler())
+    run(conf=conf_parser["B_FIND_STAIR_CENTER"], serial=SerialHandler(), camera=Camera())

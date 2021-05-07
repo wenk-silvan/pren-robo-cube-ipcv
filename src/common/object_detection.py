@@ -15,11 +15,14 @@ class ObjectDetection:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         objects = []
         for c in self.cascades:
-            detected = c.detectMultiScale(gray, scale, neighbours)
-            for (x, y, w, h) in detected:
-                area = w * h
-                if min_area < area < max_area:
-                    objects.append((Point(x, y), Point(x + w, y + h)))
+            try:
+                detected = c.detectMultiScale(gray, scale, neighbours)
+                for (x, y, w, h) in detected:
+                    area = w * h
+                    if min_area < area < max_area:
+                        objects.append((Point(x, y), Point(x + w, y + h)))
+            except Exception:
+                return []
         return objects
 
     def draw(self, img, objects, color):
