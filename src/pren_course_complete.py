@@ -19,7 +19,7 @@ def start():
     snapshot = course_find_stair_center.run(conf=conf_parser["B_FIND_STAIR_CENTER"], serial=serial)
     path: Path = course_pathfinding.run(conf=conf_parser["C_PATHFINDING"], snapshot=snapshot)
     course_climb_stair.run(conf=conf_parser["D_CLIMB_STAIR"], path=path, serial=serial)
-    success = course_find_pictogram.run(pictogram=pictogram, position_robot=path.get_final_position(), serial=serial)
+    success = course_find_pictogram.run(conf=conf_parser["E_FIND_PICTOGRAM"], pictogram=pictogram, position_robot=path.get_final_position(), serial=serial)
 
     if success:
         print("YAY!")
