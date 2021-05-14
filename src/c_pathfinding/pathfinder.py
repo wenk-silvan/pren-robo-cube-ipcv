@@ -42,12 +42,12 @@ class Pathfinder:
         gray = cv2.cvtColor(gauss, cv2.COLOR_BGR2GRAY)
         canny = cv2.Canny(gray, self.steps_canny_thresh1, self.steps_canny_thresh2, 3)
 
-        # TODO: Remove lines
-        self.hough_lines_parameters_adjustment(
-            self.img_width, self.img_height, canny,
-            self.img, self.steps_lines_rho, self.steps_lines_thresh, self.steps_lines_min_line_length,
-            self.img_height, self.stair_min_line_gap, self.stair_min_line_gap_decrease, self.steps_max_angle
-        )
+        # # UNCOMMENT TO ADJUST PARAMETERS
+        # self.hough_lines_parameters_adjustment(
+        #     self.img_width, self.img_height, canny,
+        #     self.img, self.steps_lines_rho, self.steps_lines_thresh, self.steps_lines_min_line_length,
+        #     self.img_height, self.stair_min_line_gap, self.stair_min_line_gap_decrease, self.steps_max_angle
+        # )
 
         detected = cv2.HoughLinesP(
             canny,
@@ -62,7 +62,9 @@ class Pathfinder:
         lines.sort(key=lambda l: l.p1.y, reverse=True)  # sort lines by y1 from bottom to top
         lines = self._remove_vertically_close_lines(lines, self.img_height, self.stair_min_line_gap,
                                                     self.stair_min_line_gap_decrease)
-        Pathfinder.draw_lines(lines, self.img)  # TODO: Remove this line
+
+        # UNCOMMENT TO DRAW LINES ON IMAGE
+        # Pathfinder.draw_lines(lines, self.img)
         return lines
 
     def convert_to_matrice(self, stair):

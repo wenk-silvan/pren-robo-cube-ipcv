@@ -2,40 +2,40 @@ from src.common.communication.serial_handler import SerialHandler
 from src.common.models.instruction import Instruction
 from src.common.movement.direction import Direction
 from src.common.movement.drive import Drive
+from configparser import ConfigParser
 import logging
 
 
 def get_instruction(position_pictogram: int, position_robot: int):
     distance = abs(position_robot - position_pictogram)
-    if position_robot - position_pictogram > 0:
+    if position_robot > position_pictogram:
         return Instruction(Direction.DRIVE_LEFT, distance)
     else:
         return Instruction(Direction.DRIVE_RIGHT, distance)
 
 
-def get_position_pictogram(pictogram):
+def get_position_pictogram(conf, pictogram):
     pictograms = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']
     if pictogram == "hammer":
-        return 10
+        return int(conf["position_hammer"])
     elif pictogram == "sandwich":
-        return 20
+        return int(conf["position_sandwich"])
     elif pictogram == "rule":
-        return 30
+        return int(conf["position_rule"])
     elif pictogram == "paint":
-        return 40
+        return int(conf["position_paint"])
     elif pictogram == "pencil":
-        return 50
+        return int(conf["position_pencil"])
     else:
         raise RuntimeError("The pictogram '{}' must be in {}".format(pictogram, pictograms))
 
 
-def run(pictogram, position_robot, serial: SerialHandler):
+def run(conf, pictogram, position_robot, serial: SerialHandler):
     try:
         drive = Drive(serial)
-        position_pictogram = get_position_pictogram(pictogram)
+        position_pictogram = get_position_pictogram(conf, pictogram)
         instruction: Instruction = get_instruction(position_pictogram, position_robot)
         drive.move(instruction.direction, instruction.distance)
-        # TODO: Adjust distance
         drive.forward(20)
         return True
     except RuntimeError as e:
@@ -45,4 +45,6 @@ def run(pictogram, position_robot, serial: SerialHandler):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    run("hammer", 60, SerialHandler())
+    conf_parser = ConfigParser()
+    conf_parser.read("resources/config.ini")
+    run(conf_parser["E_FIND_PICTOGRAM"], "hammer", 60, SerialHandler())

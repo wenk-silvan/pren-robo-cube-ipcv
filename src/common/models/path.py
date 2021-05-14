@@ -19,7 +19,7 @@ class Path:
         Determine theoretical position of the robot after clearing the path.
         :return: int - position
         """
-        center = 50  # TODO: Use correct value
+        center = 750  # Center of stair
         position = center
         for i in self.instructions:
             if i.direction == Direction.DRIVE_LEFT:
