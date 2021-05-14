@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+import cv2
 
 from src.common.models.point import Point
 from src.common.movement.direction import Direction
@@ -38,48 +39,51 @@ class StairDetection:
             value (int): The value by which should be moved. Either angle for rotating or millimeters for driving.
             is_centered (boolean): Flag whether the robot is in the correct spot to move on to pathfinding.
         """
-        max_angle = int(self.conf["stair_straight_max_angle"])
+        max_angle = float(self.conf["stair_straight_max_angle"])
         border_offset = int(self.conf["stair_border_offset"])
         end_left = border_offset
-        end_right = image.shape[0] - border_offset
+        end_right = image.shape[1] - border_offset
         rotation_angle = int(self.conf["rotation_angle"])
         drive_distance = int(self.conf["drive_distance"])
 
         if len(pictograms) < 1:
-            if can_see_obstacles:  # stair is too close
-                return Direction.DRIVE_BACK, drive_distance, False
+            # TODO: Now it keeps spinning while no pictogram found, IMPROVE!
+            # if can_see_obstacles and (angle <= max_angle):  # stair is too close but straight
+            #     return Direction.DRIVE_BACK, drive_distance, False
             return Direction.ROTATE_BODY_RIGHT, rotation_angle, False  # stair not found
 
-        inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0][1])
+        inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0].position)
         blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
 
         if angle <= max_angle:  # stair is straight
-            if end_left < blx and end_right < brx:  # stair is too far right
+            if end_left < blx and end_right < brx:  # stair is straight but too far right
                 return Direction.DRIVE_RIGHT, drive_distance, False
-            elif blx < end_left and brx < end_right:  # stair is too far left
+            elif blx < end_left and brx < end_right:  # stair is straight but too far left
                 return Direction.DRIVE_LEFT, drive_distance, False
             elif end_left < blx and brx < end_right:  # stair is too far away
                 return Direction.DRIVE_FORWARD, drive_distance, False
-            elif blx <= end_left and end_right <= brx:  # stair is centered
+            else:  # stair is centered
                 return Direction.DRIVE_FORWARD, 0, True
-        elif lines_horizontal[0].p1.y < lines_horizontal[0].p2.y:
-            return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
-        elif lines_horizontal[0].p1.y > lines_horizontal[0].p2.y:
-            return Direction.ROTATE_BODY_LEFT, rotation_angle, False
-        else:
-            logging.error("Stair position is in an unexpected state.")
 
-    def _calculate_intersections(self, lines_vertical, lines_horizontal, pivot: Point):
+        else:
+            if lines_horizontal[0].p1.y < lines_horizontal[0].p2.y:  # stair is skew to the right
+                return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
+            elif lines_horizontal[0].p1.y > lines_horizontal[0].p2.y:  # stair is skew to the left
+                return Direction.ROTATE_BODY_LEFT, rotation_angle, False
+            else:
+                logging.error("Stair position is in an unexpected state.")
+
+    def _calculate_intersections(self, lines_vertical, lines_horizontal, pivot):
         inters_left = []
         inters_right = []
         for line_horizontal in lines_horizontal:
             intersections = self._get_line_intersections(line_horizontal, lines_vertical)
-            inters_left_local = list(filter(lambda i: i.x < pivot.x, intersections))
-            inters_right_local = list(filter(lambda i: i.x >= pivot.x, intersections))
+            inters_left_local = list(filter(lambda i: i.x < pivot, intersections))
+            inters_right_local = list(filter(lambda i: i.x >= pivot, intersections))
             if len(inters_left_local) > 0:
-                inters_left.append(min(inters_left_local, key=lambda i: abs(pivot.x - i.x)))
+                inters_left.append(max(inters_left_local, key=lambda i: abs(pivot - i.x)))
             if len(inters_right_local) > 0:
-                inters_right.append(min(inters_right_local, key=lambda i: abs(pivot.x - i.x)))
+                inters_right.append(max(inters_right_local, key=lambda i: abs(pivot - i.x)))
         return inters_left, inters_right
 
     def _get_line_intersections(self, line_a, lines_vertical):
@@ -105,26 +109,30 @@ class StairDetection:
 
     @staticmethod
     def _calculate_stair_position(img_width, intersections_left, intersections_right, bottom_line):
-        bl = Point(0, 0)
-        br = Point(0, 0)
+        left_end = Point(0, 0)
+        right_end = Point(0, 0)
         intersections_left.sort(key=lambda i: i.y, reverse=True)
         intersections_right.sort(key=lambda i: i.y, reverse=True)
 
         angle_rad = np.math.atan2(abs(bottom_line.p1.y - bottom_line.p2.y), abs(bottom_line.p1.x - bottom_line.p2.x))
         angle = angle_rad * 180 / np.pi
 
-        if len(intersections_left) > 0:
-            bl = intersections_left[0]
+        # at least two intersections required to make sure it is left side of stair
+        if len(intersections_left) >= 2:
+            # left_end = intersections_left[0]
+            left_end = min(intersections_left, key=lambda i: i.x)
         else:
-            bl.x = 0
-            bl.y = bottom_line.p1.y
+            left_end.x = 0
+            left_end.y = bottom_line.p1.y
 
-        if len(intersections_right) > 0:
-            br = intersections_right[0]
+        # at least two intersections required to make sure it is right side of stair
+        if len(intersections_right) >= 2:
+            # right_end = intersections_right[0]
+            right_end = max(intersections_right, key=lambda i: i.x)
         else:
-            br.x = img_width
-            br.y = bottom_line.p2.y
-        return bl.x, br.x, angle
+            right_end.x = img_width
+            right_end.y = bottom_line.p2.y
+        return left_end.x, right_end.x, angle
 
     @staticmethod
     def _remove_horizontally_close_lines(lines, min_line_gap):

@@ -15,7 +15,7 @@ if __name__ == '__main__':
     cv2.createTrackbar("thresh", "Controls", 10, 255, _pass)
     cv2.createTrackbar("mll", "Controls", 10, 600, _pass)
     cv2.createTrackbar("mlg", "Controls", 10, 600, _pass)
-    img = cv2.resize(cv2.imread("../../images/stair/pathfinding/outdoor.jpg"), (1280, 960))
+    img = cv2.resize(cv2.imread("../../../images/stair/pathfinding/06/img001.jpg"), (1280, 960))
     image_manipulator = ImageManipulator(img)
     image = image_manipulator.transform_to_2d((600, 600))
 

@@ -99,9 +99,9 @@ def _remove_vertically_close_lines(lines, img_height, min_line_gap):
 
 
 config_object = ConfigParser()
-config_object.read("../../resources/config.ini")
+config_object.read("../../../resources/config.ini")
 conf = config_object["B_FIND_STAIR_CENTER"]
-image = cv2.imread(conf["img_2_path"])
+image = cv2.imread("../../../images/stair/pathfinding/06/img001.jpg")
 # image = cv2.resize(image, (1000, 750))
 stair = StairDetection(conf, ImageProcessing(conf))
 
