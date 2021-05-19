@@ -2,6 +2,9 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
+from src.common.models.obstacle import Obstacle
+from src.common.models.point import Point
+
 
 class ImageManipulator:
     def __init__(self, image):
@@ -37,13 +40,26 @@ class ImageManipulator:
         )
         pts2 = np.float32(
             [[0, 0],
-             [600, 0],
-             [0, 600],
-             [600, 600]]
+             [dimensions[0], 0],
+             [0, dimensions[1]],
+             [dimensions[0], dimensions[1]]]
         )
 
         matrix = cv2.getPerspectiveTransform(pts1, pts2)
-        return cv2.warpPerspective(self.image, matrix, dimensions)
+        return cv2.warpPerspective(self.image, matrix, dimensions), matrix
+
+    def transform_obstacle_coordinates(self, matrix, obstacle: Obstacle):
+        """
+        Transform the coordinates of the given obstacle using a matrix from transform_to_2d(...)
+        :param matrix:
+        :param obstacle:
+        :return: a new obstacle with the transformed coordinates
+        """
+        tlx, tly, tlz = matrix.dot([obstacle.top_left.x, obstacle.top_left.y, 1])
+        brx, bry, brz = matrix.dot([obstacle.bottom_right.x, obstacle.bottom_right.y, 1])
+        tl_normalized = Point(int(tlx / tlz), int(tly / tlz))
+        br_normalized = Point(int(brx / brz), int(bry / brz))
+        return Obstacle(tl_normalized, br_normalized)
 
     def __draw_circles(self):
         tl, tr, bl, br = self.__find_edges()

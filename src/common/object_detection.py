@@ -38,5 +38,5 @@ class ObjectDetection:
         [cv2.rectangle(img, (p1.x, p1.y), (p2.x, p2.y), color, 2) for (p1, p2) in objects]
 
     def draw_objects(self, img, objects, color):
-        [cv2.rectangle(img, (p.top_left.x, p.top_left.y), (p.bottom_right.x, p.bottom_right.y), color, 2) for p in
-         objects]
+        for p in objects:
+            cv2.rectangle(img, (p.top_left.x, p.top_left.y), (p.bottom_right.x, p.bottom_right.y), color)
