@@ -137,7 +137,8 @@ class Pathfinder:
 
         paths = []
         for positions in possible_positions:
-            current_pos = self.stair_end_left
+            current_pos = self.stair_end_right - (self.stair_end_right - self.stair_end_left) / 2
+
             path = Path()
             for pos in positions:
                 distance_millimeter = abs(current_pos - pos) / self.pixel_per_mm
@@ -262,7 +263,8 @@ class Pathfinder:
         :param paths: Path[] - Possible paths to clear the stair.
         :return: Path - The fastest path.
         """
-        return min(paths, key=lambda p: len(list(filter(lambda i: i.distance > 0, p.instructions))))
+        shortest = min(paths, key=lambda p: len(list(filter(lambda i: i.distance > 0, p.instructions))))
+        return shortest
 
     @staticmethod
     def draw_line(p1, p2, img, color):

@@ -22,7 +22,6 @@ def run(conf, snapshot):
         obstacles = [manipulator.transform_obstacle_coordinates(transform_matrix, o) for o in obstacles]
 
         finder = Pathfinder(image, conf)
-
         stair_with_objects = finder.create_stair_with_objects(obstacles)
         stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
         paths = finder.calculate_path(stair_with_areas)
