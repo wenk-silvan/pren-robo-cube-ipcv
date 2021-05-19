@@ -7,7 +7,7 @@ import cv2
 import torch
 
 from models.experimental import attempt_load
-from utils.general import non_max_suppression, scale_coords, xyxy2xywh
+from utils.general import non_max_suppression, scale_coords
 from utils.plots import colors, plot_one_box
 
 
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
     opt = parser.parse_args()
 
-    coord =detect(opt)
+    coord = detect(opt)
 
     t2s = pyttsx3.init()
     t2s.setProperty('voice', t2s.getProperty('voices'))
