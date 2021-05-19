@@ -36,14 +36,14 @@ def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, 
                                                        int(conf["detection_pictogram_max_area"]),
                                                        float(conf["detection_pictogram_scale"]),
                                                        int(conf["detection_pictogram_neighbours"]))
-    obstacles = obstacle_detection.detect(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
+    obstacles = obstacle_detection.detect_obstacles(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
                                           int(conf["detection_obstacle_neighbours"]))
 
     lines_vertical, lines_horizontal = stair_detection.detect_lines(image)
 
-    # # UNCOMMENT FOR TESTING
-    obstacle_detection.draw_pictograms(image, pictograms, (0, 255, 0))
-    obstacle_detection.draw(image, obstacles, (255, 0, 0))
+    # UNCOMMENT FOR TESTING
+    pictogram_detection.draw_objects(image, pictograms, (0, 255, 0))
+    obstacle_detection.draw_objects(image, obstacles, (0, 0, 255))
     ImageProcessing.draw_lines(lines_vertical, image)
     ImageProcessing.draw_lines(lines_horizontal, image)
     cv2.imshow("Result", image)
