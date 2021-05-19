@@ -29,9 +29,9 @@ def run(conf, snapshot):
         paths = finder.calculate_path(stair_with_areas)
         path = Pathfinder.determine_best_path(paths)
 
-        detector.draw_objects(image, obstacles, (0, 0, 255))
-        cv2.imshow("Result", image)
-        cv2.waitKey(0)
+        # detector.draw_objects(image, obstacles, (0, 0, 255))
+        # cv2.imshow("Result", image)
+        # cv2.waitKey(0)
 
         message = "====== All paths: ======\n"
         for p in paths:
