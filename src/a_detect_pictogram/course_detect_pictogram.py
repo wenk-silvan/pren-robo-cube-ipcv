@@ -4,8 +4,6 @@ import pyttsx3
 import logging
 import time
 
-#from imutils.video.pivideostream import PiVideoStream
-
 path_to_cascades = "resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
@@ -16,10 +14,7 @@ class PictogramDetector:
     """
     Class loads cascade files, analyzes the video stream and detects pictograms in front of the camera.
     """
-
     def __init__(self):
-        #self.vs = PiVideoStream().start()
-
         self.vs = cv2.VideoCapture(0)
         self.vs.set(3, 640)
         self.vs.set(4, 480)
@@ -42,7 +37,6 @@ class PictogramDetector:
         while counter < objectCount:
             ret, img = self.vs.read()
             img = cv2.flip(img, -1)
-            #img = imutils.resize(frame)
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
             # With all cascades check captured frame
@@ -57,7 +51,6 @@ class PictogramDetector:
                         counter += 1
                         stats[o] += 1
 
-        #self.vs.stop()
         return stats
 
 
@@ -86,4 +79,3 @@ def run():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     run()
-
