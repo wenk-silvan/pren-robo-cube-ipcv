@@ -43,14 +43,12 @@ class StairDetection:
         """
         max_angle = float(self.conf["stair_straight_max_angle"])
         rotation_angle = int(self.conf["rotation_angle"])
+        can_see_pictograms = len(pictograms) > 0
         # border_offset = int(self.conf["stair_border_offset"])
         # end_left = border_offset
         # end_right = image.shape[1] - border_offset
 
-        if len(pictograms) < 1:
-            # TODO: Now it keeps spinning while no pictogram found, IMPROVE with obstacle detection!
-            # if can_see_obstacles and (angle <= max_angle):  # stair is too close but straight
-            #     return Direction.DRIVE_BACK, drive_distance, False
+        if not can_see_pictograms and not can_see_obstacles:
             return Direction.ROTATE_BODY_RIGHT, rotation_angle, False  # stair not found
 
         # inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0].position)
@@ -66,6 +64,8 @@ class StairDetection:
         mm_per_px = 0.313
 
         if angle <= max_angle:  # stair is straight
+            if not can_see_pictograms:  # stair is too close
+                return Direction.DRIVE_BACK, 10, False
             drive_distance = pictogram.top_left.x - perspective_offset - pictogram.position + (pictogram_width / 2)
             if pictogram_top_gap < pictogram.top_left.y:  # stair is too far away
                 return Direction.DRIVE_FORWARD, 5, False
