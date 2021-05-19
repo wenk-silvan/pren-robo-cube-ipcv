@@ -2,6 +2,8 @@ import numpy as np
 import logging
 import cv2
 
+from src.common.models.line import Line
+from src.common.models.pictogram import Pictogram
 from src.common.models.point import Point
 from src.common.movement.direction import Direction
 from src.b_find_stair_center.image_processing import ImageProcessing
@@ -32,7 +34,7 @@ class StairDetection:
         :param image: The image where the stair was searched.
         :param lines_vertical: All vertical lines found in the image using given parameters. Should be handlebars.
         :param lines_horizontal: All horizontal lines found in the image using given parameters. Should be steps.
-        :param pictograms: List of detected pictograms. Each as a tuple of tl and br src.models.Point.
+        :param pictograms: List of Pictogram.
         :param can_see_obstacles: True if obstacles were detected, false if not.
         :return:
             direction (Direction): The direction of the next movement.
@@ -40,28 +42,37 @@ class StairDetection:
             is_centered (boolean): Flag whether the robot is in the correct spot to move on to pathfinding.
         """
         max_angle = float(self.conf["stair_straight_max_angle"])
-        border_offset = int(self.conf["stair_border_offset"])
-        end_left = border_offset
-        end_right = image.shape[1] - border_offset
         rotation_angle = int(self.conf["rotation_angle"])
-        drive_distance = int(self.conf["drive_distance"])
+        can_see_pictograms = len(pictograms) > 0
+        # border_offset = int(self.conf["stair_border_offset"])
+        # end_left = border_offset
+        # end_right = image.shape[1] - border_offset
 
-        if len(pictograms) < 1:
-            # TODO: Now it keeps spinning while no pictogram found, IMPROVE!
-            # if can_see_obstacles and (angle <= max_angle):  # stair is too close but straight
-            #     return Direction.DRIVE_BACK, drive_distance, False
+        if not can_see_pictograms and not can_see_obstacles:
             return Direction.ROTATE_BODY_RIGHT, rotation_angle, False  # stair not found
 
-        inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0].position)
-        blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
+        # inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0].position)
+        # blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
+
+        # TODO: Fine tune measurements
+        angle = self._get_angle(lines_horizontal[0])
+        pictogram: Pictogram = pictograms[0]
+        pictogram_width = 60
+        perspective_offset = 300
+        horizontal_tolerance = 10
+        pictogram_top_gap = 100
+        mm_per_px = 0.313
 
         if angle <= max_angle:  # stair is straight
-            if end_left < blx and end_right < brx:  # stair is straight but too far right
-                return Direction.DRIVE_RIGHT, drive_distance, False
-            elif blx < end_left and brx < end_right:  # stair is straight but too far left
-                return Direction.DRIVE_LEFT, drive_distance, False
-            elif end_left < blx and brx < end_right:  # stair is too far away
-                return Direction.DRIVE_FORWARD, drive_distance, False
+            if not can_see_pictograms:  # stair is too close
+                return Direction.DRIVE_BACK, 10, False
+            drive_distance = pictogram.top_left.x - perspective_offset - pictogram.position + (pictogram_width / 2)
+            if pictogram_top_gap < pictogram.top_left.y:  # stair is too far away
+                return Direction.DRIVE_FORWARD, 5, False
+            elif drive_distance > horizontal_tolerance:  # stair is straight but too far right
+                return Direction.DRIVE_RIGHT, drive_distance * mm_per_px, False
+            elif drive_distance < -horizontal_tolerance:  # stair is straight but too far left
+                return Direction.DRIVE_LEFT, abs(drive_distance) * mm_per_px, False
             else:  # stair is centered
                 return Direction.DRIVE_FORWARD, 0, True
 
@@ -72,6 +83,10 @@ class StairDetection:
                 return Direction.ROTATE_BODY_LEFT, rotation_angle, False
             else:
                 logging.error("Stair position is in an unexpected state.")
+
+    def _get_angle(self, line: Line):
+        angle_rad = np.math.atan2(abs(line.p1.y - line.p2.y), abs(line.p1.x - line.p2.x))
+        return angle_rad * 180 / np.pi
 
     def _calculate_intersections(self, lines_vertical, lines_horizontal, pivot):
         inters_left = []

@@ -1,9 +1,8 @@
 import time
 from configparser import ConfigParser
 import logging
-import cv2
-#
-# from src.common.camera.camera import Camera
+
+from src.common.camera.camera import Camera
 from src.common.communication.serial_handler import SerialHandler
 from src.b_find_stair_center.image_processing import ImageProcessing
 from src.common.movement.drive import Drive
@@ -36,18 +35,18 @@ def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, 
                                                        int(conf["detection_pictogram_max_area"]),
                                                        float(conf["detection_pictogram_scale"]),
                                                        int(conf["detection_pictogram_neighbours"]))
-    obstacles = obstacle_detection.detect(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
+    obstacles = obstacle_detection.detect_obstacles(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
                                           int(conf["detection_obstacle_neighbours"]))
 
     lines_vertical, lines_horizontal = stair_detection.detect_lines(image)
 
-    # # UNCOMMENT FOR TESTING
-    obstacle_detection.draw_pictograms(image, pictograms, (0, 255, 0))
-    obstacle_detection.draw(image, obstacles, (255, 0, 0))
-    ImageProcessing.draw_lines(lines_vertical, image)
-    ImageProcessing.draw_lines(lines_horizontal, image)
-    cv2.imshow("Result", image)
-    cv2.waitKey(0)
+    # UNCOMMENT FOR TESTING
+    # pictogram_detection.draw_objects(image, pictograms, (0, 255, 0))
+    # obstacle_detection.draw_objects(image, obstacles, (0, 0, 255))
+    # ImageProcessing.draw_lines(lines_vertical, image)
+    # ImageProcessing.draw_lines(lines_horizontal, image)
+    # cv2.imshow("Result", image)
+    # cv2.waitKey(0)
 
     direction, value, done = stair_detection.get_next_movement(
         image, lines_vertical, lines_horizontal, pictograms, len(obstacles) > 0)

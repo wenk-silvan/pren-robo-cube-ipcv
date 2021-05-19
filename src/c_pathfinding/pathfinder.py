@@ -42,7 +42,7 @@ class Pathfinder:
         gray = cv2.cvtColor(gauss, cv2.COLOR_BGR2GRAY)
         canny = cv2.Canny(gray, self.steps_canny_thresh1, self.steps_canny_thresh2, 3)
 
-        # # UNCOMMENT TO ADJUST PARAMETERS
+        # UNCOMMENT TO ADJUST PARAMETERS
         # self.hough_lines_parameters_adjustment(
         #     self.img_width, self.img_height, canny,
         #     self.img, self.steps_lines_rho, self.steps_lines_thresh, self.steps_lines_min_line_length,
@@ -130,14 +130,14 @@ class Pathfinder:
         :param stair_areas: Stair with free spaces as areas.
         :return: Path[]
         """
-        possible_positions = self._calculate_path_sequential(stair_areas)
+        current_pos = self.stair_end_right - (self.stair_end_right - self.stair_end_left) / 2
+        possible_positions = self._calculate_path_sequential(stair_areas, current_pos)
         if len(possible_positions) == 0:
             print("Err: No passable path found.")
             return
 
         paths = []
         for positions in possible_positions:
-            current_pos = self.stair_end_left
             path = Path()
             for pos in positions:
                 distance_millimeter = abs(current_pos - pos) / self.pixel_per_mm
@@ -211,12 +211,11 @@ class Pathfinder:
                 areas.append((obstacle3.bottom_right.x, self.stair_end_right))
             return areas
 
-    def _calculate_path_sequential(self, stair: Stair):
+    def _calculate_path_sequential(self, stair: Stair, position):
         matrice = stair.get_rows()
         combinations = list(itertools.product(*matrice))
         possible_positions = []
         for c in combinations:
-            position = self.stair_end_left
             positions = []
             for i in range(stair.count()):
                 # if current position is in area above
@@ -262,7 +261,8 @@ class Pathfinder:
         :param paths: Path[] - Possible paths to clear the stair.
         :return: Path - The fastest path.
         """
-        return min(paths, key=lambda p: len(list(filter(lambda i: i.distance > 0, p.instructions))))
+        shortest = min(paths, key=lambda p: len(list(filter(lambda i: i.distance > 0, p.instructions))))
+        return shortest
 
     @staticmethod
     def draw_line(p1, p2, img, color):

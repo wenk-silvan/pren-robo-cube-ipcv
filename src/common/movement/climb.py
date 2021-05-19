@@ -16,12 +16,12 @@ class Climb:
         return self._climb(part, -1, duration)
 
     def body_up(self, duration):
-        part = b'\20'
-        return self._climb(part, 1, duration)
+        part = b'\x20'
+        return self._climb(part, -1, duration)
 
     def body_down(self, duration):
-        part = b'\20'
-        return self._climb(part, -1, duration)
+        part = b'\x20'
+        return self._climb(part, 1, duration)
 
     def tail_up(self, duration):
         part = b'\x22'
@@ -39,6 +39,7 @@ class Climb:
         :param duration: Time in seconds.
         :return:
         """
+        logging.debug("Part: {} - Direction: {} - Duration {}".format(part, direction, duration))
         if direction not in [-2, -1, 1, 2]:
             logging.warning("%i does not count as valid direction!", direction)
             raise ValueError
@@ -53,9 +54,8 @@ class Climb:
 
         polling = True
         while polling:
-            status1 = self._serial_handler.check_status(b'\x28\x00\x00')
-            status2 = self._serial_handler.check_status(b'\x29\x00\x00')
-            if status1[2] <= 0 and status2[2] <= 0:
+            status = self._serial_handler.check_status(b'\x28\x00\x00')
+            if status[2] <= 0:
                 polling = False
             time.sleep(0.05)
 

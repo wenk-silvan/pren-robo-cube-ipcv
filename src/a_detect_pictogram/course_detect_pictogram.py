@@ -3,14 +3,13 @@ import cv2
 import pyttsx3
 import logging
 import time
-import imutils
 
-from imutils.video.pivideostream import PiVideoStream
+#from imutils.video.pivideostream import PiVideoStream
 
 path_to_cascades = "resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
-objectCount = 3  # how many objects to count for recognition
+objectCount = 21  # how many objects to count for recognition
 
 
 class PictogramDetector:
@@ -19,7 +18,12 @@ class PictogramDetector:
     """
 
     def __init__(self):
-        self.vs = PiVideoStream().start()
+        #self.vs = PiVideoStream().start()
+
+        self.vs = cv2.VideoCapture(0)
+        self.vs.set(3, 640)
+        self.vs.set(4, 480)
+
         time.sleep(1)
         self.cascades = []
         for c in paths:  # LOAD THE CLASSIFIERS
@@ -36,8 +40,9 @@ class PictogramDetector:
         stats = {'hammer': 0, 'sandwich': 0, 'rule': 0, 'paint': 0, 'pencil': 0}
 
         while counter < objectCount:
-            frame = cv2.flip(self.vs.read(), 0)
-            img = imutils.resize(frame)
+            ret, img = self.vs.read()
+            img = cv2.flip(img, -1)
+            #img = imutils.resize(frame)
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
             # With all cascades check captured frame
@@ -52,7 +57,7 @@ class PictogramDetector:
                         counter += 1
                         stats[o] += 1
 
-        self.vs.stop()
+        #self.vs.stop()
         return stats
 
 
@@ -81,3 +86,4 @@ def run():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     run()
+

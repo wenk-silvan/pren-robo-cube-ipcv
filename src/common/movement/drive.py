@@ -20,7 +20,7 @@ class Drive:
         Triggers the robot to drive backward by first rotating all wheels to 0 degrees and then driving backward.
         :param distance: The distance in millimeters.
         """
-        logging.info("Drive: backward %s mm", distance)
+        logging.info("Drive: backward %s cm", distance)
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
@@ -31,7 +31,7 @@ class Drive:
         Triggers the robot to drive forward by first rotating all wheels to 0 degrees and then driving forward.
         :param distance: The distance in millimeters.
         """
-        logging.info("Drive: forward %s mm", distance)
+        logging.info("Drive: forward %s cm", distance)
         if self.wheels_orientation == WheelState.SIDEWAYS:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT

@@ -40,7 +40,7 @@ class Serial:
         logging.debug("FAKE: write - got data" + str(data))
         if data[0].to_bytes(1, byteorder='big', signed=False) not in (b'\x19', b'\x28', b'\x29', b'\x40'):
             self.status_reading = True
-            self.counter = 21
+            self.counter = 7
             self.last_data = data
         else:
             self.reading_first_byte = data[0].to_bytes(1, byteorder='big', signed=False)
