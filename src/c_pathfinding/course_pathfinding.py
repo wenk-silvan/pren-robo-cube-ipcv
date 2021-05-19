@@ -16,13 +16,15 @@ def run(conf, snapshot):
         # TODO: Adjust detection parameters
         detector = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
         obstacles = detector.detect_obstacles(snapshot, 5000, 100000, float(conf["detection_obstacle_scale"]),
-                                    int(conf["detection_obstacle_neighbours"]))
+                                              int(conf["detection_obstacle_neighbours"]))
         manipulator = ImageManipulator(snapshot)
         image, transform_matrix = manipulator.transform_to_2d((600, 600))
         obstacles = [manipulator.transform_obstacle_coordinates(transform_matrix, o) for o in obstacles]
 
         finder = Pathfinder(image, conf)
         stair_with_objects = finder.create_stair_with_objects(obstacles)
+        if stair_with_objects.count() < 6:
+            raise RuntimeError("Less than 6 steps where detected.")
         stair_with_areas = finder.create_stair_passable_areas(stair_with_objects)
         paths = finder.calculate_path(stair_with_areas)
         path = Pathfinder.determine_best_path(paths)

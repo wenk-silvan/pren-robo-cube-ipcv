@@ -130,15 +130,14 @@ class Pathfinder:
         :param stair_areas: Stair with free spaces as areas.
         :return: Path[]
         """
-        possible_positions = self._calculate_path_sequential(stair_areas)
+        current_pos = self.stair_end_right - (self.stair_end_right - self.stair_end_left) / 2
+        possible_positions = self._calculate_path_sequential(stair_areas, current_pos)
         if len(possible_positions) == 0:
             print("Err: No passable path found.")
             return
 
         paths = []
         for positions in possible_positions:
-            current_pos = self.stair_end_right - (self.stair_end_right - self.stair_end_left) / 2
-
             path = Path()
             for pos in positions:
                 distance_millimeter = abs(current_pos - pos) / self.pixel_per_mm
@@ -212,12 +211,11 @@ class Pathfinder:
                 areas.append((obstacle3.bottom_right.x, self.stair_end_right))
             return areas
 
-    def _calculate_path_sequential(self, stair: Stair):
+    def _calculate_path_sequential(self, stair: Stair, position):
         matrice = stair.get_rows()
         combinations = list(itertools.product(*matrice))
         possible_positions = []
         for c in combinations:
-            position = self.stair_end_left
             positions = []
             for i in range(stair.count()):
                 # if current position is in area above
