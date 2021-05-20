@@ -36,7 +36,7 @@ def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, 
                                                        float(conf["detection_pictogram_scale"]),
                                                        int(conf["detection_pictogram_neighbours"]))
     obstacles = obstacle_detection.detect_obstacles(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
-                                          int(conf["detection_obstacle_neighbours"]))
+                                                    int(conf["detection_obstacle_neighbours"]))
 
     lines_vertical, lines_horizontal = stair_detection.detect_lines(image)
 
