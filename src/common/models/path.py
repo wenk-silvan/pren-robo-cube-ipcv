@@ -36,6 +36,6 @@ class Path:
             s += "{}. ".format(counter)
             s += ins.direction.name
             s += " - "
-            s += str(int(ins.distance)) + " mm"
+            s += str(int(ins.distance)) + " mm and go up"
             s += "\n"
         return s
