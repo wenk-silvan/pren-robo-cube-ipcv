@@ -169,13 +169,27 @@ class Drive:
             logging.warning("%i ")
             raise ValueError
 
-        # Actual driving
-        command = b'\x15' + direction.to_bytes(1, byteorder='big', signed=True)\
-                  + distance_cm.to_bytes(1, byteorder='big', signed=False)
-        self._serial_handler.send_command(command)
+        self._climb.body_down(5)
+        self._climb.head_up(5)
+        self._climb.tail_up(5)
 
-        # Check status until driving is over
-        return self._polling_motors()
+        self._rotate_wheels_diagonal()
+
+        self._climb.head_down(5)
+        self._climb.tail_down(5)
+        self._climb.body_up(5)
+
+        self._drive(direction, distance_cm)
+
+        self._climb.body_down(5)
+        self._climb.head_up(5)
+        self._climb.tail_up(5)
+
+        self._rotate_all_wheels(0)
+
+        self._climb.head_down(5)
+        self._climb.tail_down(5)
+        self._climb.body_up(5)
 
     def _polling_motors(self):
         """
@@ -216,10 +230,24 @@ class Drive:
         """
         # Since the servos are not strong enough we need to lift the tires off the ground in order to turn them...
         self._climb.body_down(5)
+        self._climb.head_up(5)
+        self._climb.tail_up(5)
 
         # Send rotation command
         command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'\x00'
         self._serial_handler.send_command(command)
         time.sleep(0.5)  # Ensure there was enough time to turn the wheels (no check)
+        self._polling_motors()
+
+        self._climb.head_down(5)
+        self._climb.tail_down(5)
         self._climb.body_up(5)
         return True
+
+    def _rotate_wheels_diagonal(self):
+        logging.debug("Rotate wheels in diagonal direction to 45 degree to rotate body.")
+        # TODO: Send correct command to rotate all wheels 45° in correct direction
+        command = b'\x30' + b'\x00'
+        self._serial_handler.send_command(command)
+        time.sleep(0.5)
+        return self._polling_motors()
