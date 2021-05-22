@@ -10,8 +10,9 @@ def checksum(byte_array):
     :param byte_array: of length 4 e.g. b'\x19\x10\x00\x29'
     :return: True for valid checksum, False or failed communication
     """
-    if (sum(byte_array[0:3]) % 256) == byte_array[3]:
-        return True
+    if len(byte_array) == 4:
+        if (sum(byte_array[0:3]) % 256) == byte_array[3]:
+            return True
     return False
 
 
