@@ -13,7 +13,7 @@ class Drive:
         self._sensors = Sensor(self._serial_handler)
         self._climb = Climb(self._serial_handler)
         self.wheels_orientation = WheelState.STRAIGHT
-        self._rotate_all_wheels(0)
+        self._rotate_all_wheels(1)  # initialized as 0 on stm
 
     def backward(self, distance):
         """
@@ -111,6 +111,11 @@ class Drive:
         logging.info("Drive: Stop driving now")
         return self._drive_distance(1, 0)
 
+    def _rotate_all_wheels(self, angle):
+        servo = b'\x30'
+        logging.debug("Rotate all wheels to %s degree", angle)
+        return self._rotate_wheels(servo, angle)
+
     def _rotate_front_wheels(self, angle):
         servo = b'\x31'
         logging.debug("Rotate front wheels to %s degree", angle)
@@ -121,10 +126,28 @@ class Drive:
         logging.debug("Rotate back wheels to %s degree", angle)
         return self._rotate_wheels(servo, angle)
 
-    def _rotate_all_wheels(self, angle):
-        servo = b'\x30'
-        logging.debug("Rotate all wheels to %s degree", angle)
-        return self._rotate_wheels(servo, angle)
+    def _rotate_wheels_diagonal(self):
+        # Something  /  \
+        #  like so   \  /
+        servo = b'\x33'
+        self.wheels_orientation = WheelState.DIAGONAL
+        logging.debug("Rotate wheels in diagonal direction to 45 degree to rotate body.")
+        return self._rotate_wheels(servo, 45)
+
+    def _rotate_wheels(self, servo, angle):
+        """
+        Actual Rotation of the Wheels. Triggers one or two servos.
+        Wheels need to be in the air in order to turn them.
+        :param servo: x30 = front, x31 = back, x32 = both
+        :param angle: [-45 to 90] the Angle the Servos should turn.
+        :return:
+        """
+        self._climb.body_down(5)
+        command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'\x00'
+        self._serial_handler.send_command(command)
+        time.sleep(0.5)  # Ensure there was enough time to turn the wheels (no check)
+        self._climb.body_up(5)
+        return True
 
     def _drive_distance(self, direction, distance_cm):
         self._drive(direction, distance_cm)
@@ -169,27 +192,15 @@ class Drive:
             logging.warning("%i ")
             raise ValueError
 
-        self._climb.body_down(5)
-        self._climb.head_up(5)
-        self._climb.tail_up(5)
+        if not self.wheels_orientation == WheelState.DIAGONAL:
+            self._rotate_wheels_diagonal()
 
-        self._rotate_wheels_diagonal()
+        # TODO what command to use / Check with Michael
+        command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True) \
+                  + distance_cm.to_bytes(1, byteorder='big', signed=False)
+        self._serial_handler.send_command(command)
 
-        self._climb.head_down(5)
-        self._climb.tail_down(5)
-        self._climb.body_up(5)
-
-        self._drive(direction, distance_cm)
-
-        self._climb.body_down(5)
-        self._climb.head_up(5)
-        self._climb.tail_up(5)
-
-        self._rotate_all_wheels(0)
-
-        self._climb.head_down(5)
-        self._climb.tail_down(5)
-        self._climb.body_up(5)
+        return True
 
     def _polling_motors(self):
         """
@@ -220,34 +231,3 @@ class Drive:
             time.sleep(0.005)
 
         return True
-
-    def _rotate_wheels(self, servo, angle):
-        """
-        Actual Rotation of the Wheels. Triggers one or two servos.
-        :param servo: x30 = front, x31 = back, x32 = both
-        :param angle: [-45 to 90] the Angle the Servos should turn.
-        :return:
-        """
-        # Since the servos are not strong enough we need to lift the tires off the ground in order to turn them...
-        self._climb.body_down(5)
-        self._climb.head_up(5)
-        self._climb.tail_up(5)
-
-        # Send rotation command
-        command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'\x00'
-        self._serial_handler.send_command(command)
-        time.sleep(0.5)  # Ensure there was enough time to turn the wheels (no check)
-        self._polling_motors()
-
-        self._climb.head_down(5)
-        self._climb.tail_down(5)
-        self._climb.body_up(5)
-        return True
-
-    def _rotate_wheels_diagonal(self):
-        logging.debug("Rotate wheels in diagonal direction to 45 degree to rotate body.")
-        # TODO: Send correct command to rotate all wheels 45° in correct direction
-        command = b'\x30' + b'\x00'
-        self._serial_handler.send_command(command)
-        time.sleep(0.5)
-        return self._polling_motors()
