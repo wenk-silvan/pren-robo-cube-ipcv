@@ -28,6 +28,7 @@ class Colors:
 
 colors = Colors()  # create instance for 'from utils.plots import colors'
 
+
 def plot_one_box(x, im, color=None, label=None, line_thickness=3):
     # Plots one bounding box on image 'im' using OpenCV
     assert im.data.contiguous, 'Image not contiguous. Apply np.ascontiguousarray(im) to plot_on_box() input image.'

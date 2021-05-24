@@ -48,10 +48,17 @@ def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale
     return img, ratio, (dw, dh)
 
 
-def detect(opt):
-    source, weights, view_img, save_txt, imgsz, device = opt.source, opt.weights, opt.view_img, opt.save_txt, \
-        opt.img_size, opt.device
-    save_img = not opt.nosave and not source.endswith('.txt')
+def detect():
+    # Configuration
+    weights = './weights/brick.pt'
+    device = 'cpu'
+    imgsz = 640
+    conf_thres = 0.6
+    iou_thres = 0.45
+    save_img = True
+
+    in_image_path = "./data/base.jpg"
+    out_image_path = './data/outimage.jpg'
 
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
@@ -70,7 +77,8 @@ def detect(opt):
     im0s = cv2.flip(im0s, -1)
 
     # For testing purpose
-    im0s = cv2.imread("data/base.jpg")  # 1280 x 960
+    im0s = cv2.imread(in_image_path)  # 1280 x 960
+    print("img shape: {}".format(im0s.shape))
     img = letterbox(im0s, imgsz, stride)[0]
 
     # Convert
@@ -87,10 +95,10 @@ def detect(opt):
         img = img.unsqueeze(0)
 
     # Inference
-    pred = model(img, augment=opt.augment)[0]
+    pred = model(img, augment=False)[0]
 
     # Apply NMS
-    pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
+    pred = non_max_suppression(pred, conf_thres, iou_thres, classes=0, agnostic=None)
 
     coordinates = []
 
@@ -100,7 +108,7 @@ def detect(opt):
         s, p, im0, frame = "image", "./", im0s.copy(), 0
         s += '%gx%g ' % img.shape[2:]  # print string
         gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-        imc = im0.copy() if opt.save_crop else im0  # for opt.save_crop
+        imc = im0  # for opt.save_crop
         if len(det):
             # Rescale boxes from img_size to im0 size
             det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
@@ -120,49 +128,17 @@ def detect(opt):
 
                 if save_img:  # Add bbox to image
                     c = int(cls)  # integer class
-                    label = None if opt.hide_labels else (names[c] if opt.hide_conf else f'{names[c]} {conf:.2f}')
-                    plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=opt.line_thickness)
+                    label = f'{names[c]} {conf:.2f}'
+                    plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=3)
 
         # Save results (image with detections)
         if save_img:
-            cv2.imwrite('data/outimage.jpg', im0)
+            cv2.imwrite(out_image_path, im0)
 
     print(f'\nDone. in {time.time() - t0:.3f}s')
     print(f'Found {len(coordinates)} Objects with coordinates: {coordinates}')
-    return(coordinates)
+    return coordinates
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='weights/brick.pt', help='model.pt path(s)')
-    parser.add_argument('--source', type=str, default='data/images', help='source')  # file/folder, 0 for webcam
-    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.6, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
-    parser.add_argument('--device', default='cpu', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--view-img', action='store_true', help='display results')
-    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
-    parser.add_argument('--save-crop', action='store_true', help='save cropped prediction boxes')
-    parser.add_argument('--nosave', action='store_true', help='do not save images/videos')
-    parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
-    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
-    parser.add_argument('--augment', action='store_true', help='augmented inference')
-    parser.add_argument('--update', action='store_true', help='update all models')
-    parser.add_argument('--project', default='runs/detect', help='save results to project/name')
-    parser.add_argument('--name', default='exp', help='save results to project/name')
-    parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('--line-thickness', default=3, type=int, help='bounding box thickness (pixels)')
-    parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
-    parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
-    opt = parser.parse_args()
-
-    coord = detect(opt)
-
-    t2s = pyttsx3.init()
-    t2s.setProperty('voice', t2s.getProperty('voices'))
-    t2s.say(f'I found {len(coord)} bricks on the stair')
-    t2s.runAndWait()
-
-
-
+    detect()

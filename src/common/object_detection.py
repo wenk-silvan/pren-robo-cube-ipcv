@@ -5,6 +5,7 @@ import cv2
 from src.common.models.obstacle import Obstacle
 from src.common.models.pictogram import Pictogram
 from src.common.models.point import Point
+from src.common.yolo import detect
 
 
 class ObjectDetection:
@@ -13,10 +14,19 @@ class ObjectDetection:
         for c in cascade_names:
             self.cascades.append(cv2.CascadeClassifier(path_to_cascade + c))
 
-    def detect_obstacles(self, img, min_area, max_area, scale, neighbours):
-        # TODO: Replace with real obstacle detection.
-        objects = [(854, 526), (1006, 603)], [(602, 278), (722, 302)], [(803, 344), (924, 377)], [(834, 724), (1070, 818)], \
-                  [(238, 523), (414, 620)], [(809, 246), (910, 305)], [(311, 401), (432, 487)]
+    def detect_obstacles(self):
+
+        objects = detect.detect()
+        print(objects)
+        # Dummy Coordinates to test with
+        '''objects = [(854, 526), (1006, 603)], \
+                  [(602, 278), (722,  302)], \
+                  [(803, 344), (924,  377)], \
+                  [(834, 724), (1070, 818)], \
+                  [(238, 523), (414,  620)], \
+                  [(809, 246), (910,  305)], \
+                  [(311, 401), (432,  487)]
+        '''
         return [Obstacle(Point(o[0][0], o[0][1]), Point(o[1][0], o[1][1])) for o in objects]
 
     def detect_pictograms(self, img, min_area, max_area, scale, neighbours):
