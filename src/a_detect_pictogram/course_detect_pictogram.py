@@ -7,7 +7,7 @@ import time
 path_to_cascades = "resources/cascades/pictogram/"
 paths = ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml']  # PATH OF THE CASCADE
 objectNames = ['hammer', 'sandwich', 'rule', 'paint', 'pencil']  # OBJECT NAMES TO DISPLAY
-objectCount = 21  # how many objects to count for recognition
+objectCount = 7  # how many objects to count for recognition
 
 
 class PictogramDetector:
@@ -67,6 +67,8 @@ def run():
 
         t2s = pyttsx3.init()
         t2s.setProperty('voice', t2s.getProperty('voices'))
+        t2s.setProperty('rate', 100)
+        t2s.setProperty('volume', 1)
         comb = 'some' if result is 'paint' else 'a'
         t2s.say("I am looking for %s %s" % (comb, result))
         logging.info("detected: %s", result)

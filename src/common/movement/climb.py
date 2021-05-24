@@ -7,29 +7,54 @@ class Climb:
         self._serial_handler = serial_handler
         pass
 
-    def head_up(self, duration):
+    def head_up_slow(self, duration):
         part = b'\x21'
         return self._climb(part, 1, duration)
 
-    def head_down(self, duration):
+    def head_down_slow(self, duration):
         part = b'\x21'
         return self._climb(part, -1, duration)
 
-    def body_up(self, duration):
+    def head_up_fast(self, duration):
+        part = b'\x21'
+        return self._climb(part, 2, duration)
+
+    def head_down_fast(self, duration):
+        part = b'\x21'
+        return self._climb(part, -2, duration)
+
+    def body_up_slow(self, duration):
         part = b'\x20'
         return self._climb(part, -1, duration)
 
-    def body_down(self, duration):
+    def body_down_slow(self, duration):
         part = b'\x20'
         return self._climb(part, 1, duration)
 
-    def tail_up(self, duration):
+    def body_up_fast(self, duration):
+        part = b'\x20'
+        return self._climb(part, -2, duration)
+
+    def body_down_fast(self, duration):
+        part = b'\x20'
+        return self._climb(part, 2, duration)
+
+    def tail_up_slow(self, duration):
         part = b'\x22'
         return self._climb(part, 1, duration)
 
-    def tail_down(self, duration):
+    def tail_down_slow(self, duration):
         part = b'\x22'
         return self._climb(part, -1, duration)
+
+    def tail_up_fast(self, duration):
+        part = b'\x22'
+        return self._climb(part, 2, duration)
+
+    def tail_down_fast(self, duration):
+        part = b'\x22'
+        return self._climb(part, -2, duration)
+
 
     def _climb(self, part, direction, duration):
         """

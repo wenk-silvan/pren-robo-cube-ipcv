@@ -27,7 +27,7 @@ class SerialHandler:
         :param serial_object: Optional pre initialized serial object
         """
         if serial_object is None:
-            serial_object = serial.Serial('/dev/ttyS0', 115200, timeout=1)
+            serial_object = serial.Serial('/dev/ttyAMA0', 115200, timeout=1)
 
         self.ser = serial_object
         self.ser.flush()
@@ -40,7 +40,7 @@ class SerialHandler:
         """
         data = byte_array + (sum(byte_array) % 256).to_bytes(1, byteorder='big', signed=False)
         logging.debug("sending command: " + str(data))
-        
+
         # Try 5 times to get a valid answer (checksum and not "nok") before sending the answer back to the caller
         for i in range(5):
             self.ser.write(data)

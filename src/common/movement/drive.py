@@ -12,8 +12,12 @@ class Drive:
         self._serial_handler = serial_handler
         self._sensors = Sensor(self._serial_handler)
         self._climb = Climb(self._serial_handler)
+        self._climb.tail_up_slow(40)
+        self._climb.head_down_slow(50)
+        self._climb.tail_down_fast(9)
+        self._climb.head_up_fast(5)
         self.wheels_orientation = WheelState.STRAIGHT
-        self._rotate_all_wheels(1)  # initialized as 0 on stm
+        self._rotate_all_wheels(1)
 
     def backward(self, distance):
         """
@@ -21,10 +25,21 @@ class Drive:
         :param distance: The distance in millimeters.
         """
         logging.info("Drive: backward %s cm", distance)
-        if self.wheels_orientation == WheelState.SIDEWAYS:
+        if self.wheels_orientation != WheelState.STRAIGHT:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
         return self._drive_distance(-2, distance)
+
+    def backward_slow(self, distance):
+        """
+        Triggers the robot to drive backward by first rotating all wheels to 0 degrees and then driving backward.
+        :param distance: The distance in millimeters.
+        """
+        logging.info("Drive: backward %s cm", distance)
+        if self.wheels_orientation != WheelState.STRAIGHT:
+            self._rotate_all_wheels(0)
+            self.wheels_orientation = WheelState.STRAIGHT
+        return self._drive_distance(-1, distance)
 
     def forward(self, distance):
         """
@@ -32,10 +47,22 @@ class Drive:
         :param distance: The distance in millimeters.
         """
         logging.info("Drive: forward %s cm", distance)
-        if self.wheels_orientation == WheelState.SIDEWAYS:
+        if self.wheels_orientation != WheelState.STRAIGHT:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
         return self._drive_distance(2, distance)
+        pass
+
+    def forward_slow(self, distance):
+        """
+        Triggers the robot to drive forward by first rotating all wheels to 0 degrees and then driving forward.
+        :param distance: The distance in millimeters.
+        """
+        logging.info("Drive: forward %s cm", distance)
+        if self.wheels_orientation != WheelState.STRAIGHT:
+            self._rotate_all_wheels(0)
+            self.wheels_orientation = WheelState.STRAIGHT
+        return self._drive_distance(1, distance)
         pass
 
     def forward_to_object(self, threshold):
@@ -44,7 +71,7 @@ class Drive:
         :param threshold: The threshold in mm to approach object
         """
         logging.info("Drive: forward to object until %s mm away", threshold)
-        if self.wheels_orientation == WheelState.SIDEWAYS:
+        if self.wheels_orientation != WheelState.STRAIGHT:
             self._rotate_all_wheels(0)
             self.wheels_orientation = WheelState.STRAIGHT
         return self._drive_sensors(1, threshold)
@@ -55,7 +82,7 @@ class Drive:
         :param distance: The distance in millimeters.
         """
         logging.info("Drive: left %s mm", distance)
-        if self.wheels_orientation == WheelState.STRAIGHT:
+        if self.wheels_orientation != WheelState.SIDEWAYS:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
         return self._drive_distance(-2, distance)
@@ -86,7 +113,7 @@ class Drive:
         :param distance: The distance in millimeters.
         """
         logging.info("Drive: right %s mm", distance)
-        if self.wheels_orientation == WheelState.STRAIGHT:
+        if self.wheels_orientation != WheelState.SIDEWAYS:
             self._rotate_all_wheels(90)
             self.wheels_orientation = WheelState.SIDEWAYS
         return self._drive_distance(2, distance)
@@ -142,11 +169,11 @@ class Drive:
         :param angle: [-45 to 90] the Angle the Servos should turn.
         :return:
         """
-        self._climb.body_down(5)
+        self._climb.body_down_fast(8)
         command = servo + angle.to_bytes(1, byteorder='big', signed=True) + b'\x00'
         self._serial_handler.send_command(command)
         time.sleep(0.5)  # Ensure there was enough time to turn the wheels (no check)
-        self._climb.body_up(5)
+        self._climb.body_up_fast(8)
         return True
 
     def _drive_distance(self, direction, distance_cm):
@@ -196,7 +223,7 @@ class Drive:
             self._rotate_wheels_diagonal()
 
         # TODO what command to use / Check with Michael
-        command = b'\x10' + direction.to_bytes(1, byteorder='big', signed=True) \
+        command = b'\x15' + direction.to_bytes(1, byteorder='big', signed=True) \
                   + distance_cm.to_bytes(1, byteorder='big', signed=False)
         self._serial_handler.send_command(command)
 
