@@ -1,14 +1,12 @@
-import argparse
 import time
 import numpy as np
 
-import pyttsx3
 import cv2
 import torch
 
-from models.experimental import attempt_load
-from utils.general import non_max_suppression, scale_coords
-from utils.plots import colors, plot_one_box
+from src.common.yolo.models.experimental import attempt_load
+from src.common.yolo.utils.general import non_max_suppression, scale_coords
+from src.common.yolo.utils.plots import colors, plot_one_box
 
 
 def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
@@ -50,23 +48,26 @@ def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale
 
 def detect(image):
     # Configuration
-    weights = './weights/brick.pt'
+    weights = './src/common/yolo/weights/brick.pt'
     device = 'cpu'
     imgsz = 640
     conf_thres = 0.6
     iou_thres = 0.45
     save_img = True
 
-    in_image_path = "./data/base.jpg"
-    out_image_path = './data/outimage.jpg'
+    in_image_path = "./src/common/yolo/data/base.jpg"
+    out_image_path = './src/common/yolo/data/outimage.jpg'
 
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
     stride = int(model.stride.max())  # model stride
     names = model.module.names if hasattr(model, 'module') else model.names  # get class names
 
-    print("image size = {} and stride = {}\n".format(imgsz, stride))
-    print("img shape: {}".format(im0s.shape))
+    # For Testing purpose without camera
+    if image == 1:
+        image = cv2.imread(in_image_path)  # 1280 x 960
+    # print("img shape: {}".format(image.shape))
+
     img = letterbox(image, imgsz, stride)[0]
 
     # Convert
@@ -93,7 +94,7 @@ def detect(image):
     # Process detections
     for i, det in enumerate(pred):  # detections per image
 
-        s, p, im0, frame = "image", "./", im0s.copy(), 0
+        s, p, im0, frame = "image", "./", image.copy(), 0
         s += '%gx%g ' % img.shape[2:]  # print string
         gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
         imc = im0  # for opt.save_crop
@@ -112,7 +113,7 @@ def detect(image):
                 # Print Box coordinates
                 c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
                 coordinates.append([c1, c2])
-                print("Found corners: [{},{}]".format(c1, c2))
+                # print("Found corners: [{},{}]".format(c1, c2))
 
                 if save_img:  # Add bbox to image
                     c = int(cls)  # integer class
@@ -123,10 +124,10 @@ def detect(image):
         if save_img:
             cv2.imwrite(out_image_path, im0)
 
-    print(f'\nDone. in {time.time() - t0:.3f}s')
-    print(f'Found {len(coordinates)} Objects with coordinates: {coordinates}')
+    # print(f'\nDone. in {time.time() - t0:.3f}s')
+    # print(f'Found {len(coordinates)} Objects with coordinates: {coordinates}')
     return coordinates
 
 
 if __name__ == '__main__':
-    detect()
+    print(detect(2))
