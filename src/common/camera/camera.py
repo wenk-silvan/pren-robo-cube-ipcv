@@ -6,8 +6,9 @@ import cv2
 
 class Camera:
     def __init__(self):
-        self.stream = PiVideoStream()
-        self.stream.start()
+        self.stream = cv2.VideoCapture(0)
+        self.stream.set(3, 1280)
+        self.stream.set(4, 960)
         time.sleep(1)
 
     def __exit__(self):
@@ -19,5 +20,5 @@ class Camera:
         :return:
         """
         frame = self.stream.read()
-        flipped_frame = cv2.flip(frame, 0)  # flip vertically
+        flipped_frame = cv2.flip(frame, -1)  # flip vertically
         return imutils.resize(image=flipped_frame, width=1280, height=960)

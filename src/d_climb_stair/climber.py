@@ -38,11 +38,11 @@ class Climber:
 
     def _step_up(self):
         logging.info("Try to climb next step")
-        self.drive.forward(0)  # Make sure wheels are angled 0 degrees.
-        self.climb.head_up(self.duration)
-        self.drive.forward(self.forward_head_mm)
-        self.climb.body_up(self.duration)
-        self.drive.forward(self.forward_body_mm)
-        self.climb.body_up(self.duration)
-        self.drive.forward(self.forward_tail_mm)
+        self.drive.forward_slow(0)  # Make sure wheels are angled 0 degrees.
+        self.climb.head_up_fast(self.duration)
+        self.drive.forward_slow(self.forward_head_mm)
+        self.climb.body_up_fast(self.duration)
+        self.drive.forward_slow(self.forward_body_mm)
+        self.climb.body_up_fast(self.duration)
+        self.drive.forward_slow(self.forward_tail_mm)
         logging.info("Step climbed successfully.")

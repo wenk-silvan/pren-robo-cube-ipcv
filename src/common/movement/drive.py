@@ -94,17 +94,18 @@ class Drive:
         :param value: Either distance in millimeters or angle in degrees
         :return:
         """
-        if direction == Direction.DRIVE_BACK.value:
+        value = int(value)
+        if direction == Direction.DRIVE_BACK:
             return self.backward(value)
-        elif direction == Direction.DRIVE_FORWARD.value:
+        elif direction == Direction.DRIVE_FORWARD:
             return self.forward(value)
-        elif direction == Direction.DRIVE_LEFT.value:
+        elif direction == Direction.DRIVE_LEFT:
             return self.left(value)
-        elif direction == Direction.DRIVE_RIGHT.value:
+        elif direction == Direction.DRIVE_RIGHT:
             return self.right(value)
-        elif direction == Direction.ROTATE_BODY_RIGHT.value:
+        elif direction == Direction.ROTATE_BODY_RIGHT:
             return self.rotate_body_right(value)
-        elif direction == Direction.ROTATE_BODY_LEFT.value:
+        elif direction == Direction.ROTATE_BODY_LEFT:
             return self.rotate_body_left(value)
 
     def right(self, distance):

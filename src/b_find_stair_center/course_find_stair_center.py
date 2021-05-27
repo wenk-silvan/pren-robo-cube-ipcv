@@ -31,10 +31,14 @@ def run(conf, serial: SerialHandler, camera):
 
 def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, stair_detection):
     image = camera.snapshot()
-    pictograms = pictogram_detection.detect_pictograms(image, int(conf["detection_pictogram_min_area"]),
-                                                       int(conf["detection_pictogram_max_area"]),
-                                                       float(conf["detection_pictogram_scale"]),
-                                                       int(conf["detection_pictogram_neighbours"]))
+    pictograms = []
+    for i in range(2):
+        if len(pictograms) > 0:
+            break
+        pictograms = pictogram_detection.detect_pictograms(image, int(conf["detection_pictogram_min_area"]),
+                                                        int(conf["detection_pictogram_max_area"]),
+                                                        float(conf["detection_pictogram_scale"]),
+                                                        int(conf["detection_pictogram_neighbours"]))
     obstacles = obstacle_detection.detect_obstacles(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
                                                     int(conf["detection_obstacle_neighbours"]))
 
