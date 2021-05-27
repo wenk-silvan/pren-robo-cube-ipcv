@@ -14,14 +14,13 @@ def run(conf, serial: SerialHandler, camera):
     try:
         drive = Drive(serial)
 
-        pictogram_detection = ObjectDetection("resources/cascades/pictogram/",
+        object_detection = ObjectDetection("resources/cascades/pictogram/",
                                               ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
-        obstacle_detection = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
         stair_detection = StairDetection(conf, ImageProcessing(conf))
         is_centered = False
 
         while not is_centered:
-            is_centered = try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, stair_detection)
+            is_centered = try_to_center(conf, camera, drive, object_detection, stair_detection)
             time.sleep(2)
         logging.info("Robot is centered, take snapshot.")
         return camera.snapshot()
@@ -29,18 +28,17 @@ def run(conf, serial: SerialHandler, camera):
         logging.error("Error in b_find_stair_center:\n", e)
 
 
-def try_to_center(conf, camera, drive, pictogram_detection, obstacle_detection, stair_detection):
+def try_to_center(conf, camera, drive, object_detection, stair_detection):
     image = camera.snapshot()
     pictograms = []
     for i in range(2):
         if len(pictograms) > 0:
             break
-        pictograms = pictogram_detection.detect_pictograms(image, int(conf["detection_pictogram_min_area"]),
+        pictograms = object_detection.detect_pictograms(image, int(conf["detection_pictogram_min_area"]),
                                                         int(conf["detection_pictogram_max_area"]),
                                                         float(conf["detection_pictogram_scale"]),
                                                         int(conf["detection_pictogram_neighbours"]))
-    obstacles = obstacle_detection.detect_obstacles(image, 2000, 30000, float(conf["detection_obstacle_scale"]),
-                                                    int(conf["detection_obstacle_neighbours"]))
+    obstacles = object_detection.detect_obstacles(image)
 
     lines_vertical, lines_horizontal = stair_detection.detect_lines(image)
 

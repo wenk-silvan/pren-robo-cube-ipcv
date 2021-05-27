@@ -14,9 +14,8 @@ class ObjectDetection:
         for c in cascade_names:
             self.cascades.append(cv2.CascadeClassifier(path_to_cascade + c))
 
-    def detect_obstacles(self):
-
-        objects = detect.detect()
+    def detect_obstacles(self, img):
+        objects = detect.detect(img)
         print(objects)
         # Dummy Coordinates to test with
         '''objects = [(854, 526), (1006, 603)], \

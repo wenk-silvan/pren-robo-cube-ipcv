@@ -48,7 +48,7 @@ def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale
     return img, ratio, (dw, dh)
 
 
-def detect():
+def detect(image):
     # Configuration
     weights = './weights/brick.pt'
     device = 'cpu'
@@ -66,20 +66,8 @@ def detect():
     names = model.module.names if hasattr(model, 'module') else model.names  # get class names
 
     print("image size = {} and stride = {}\n".format(imgsz, stride))
-
-    # Load Image
-    cam = cv2.VideoCapture(0)
-    cam.set(3, 1280)
-    cam.set(4, 960)
-
-    ret, im0s = cam.read()
-    # Flip Horizontally + Vertically
-    im0s = cv2.flip(im0s, -1)
-
-    # For testing purpose
-    im0s = cv2.imread(in_image_path)  # 1280 x 960
     print("img shape: {}".format(im0s.shape))
-    img = letterbox(im0s, imgsz, stride)[0]
+    img = letterbox(image, imgsz, stride)[0]
 
     # Convert
     img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
