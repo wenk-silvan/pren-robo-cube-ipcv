@@ -62,7 +62,7 @@ def try_to_center(conf, camera, drive, object_detection, stair_detection):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
     run(conf=conf_parser["B_FIND_STAIR_CENTER"], serial=SerialHandler(), camera=Camera())

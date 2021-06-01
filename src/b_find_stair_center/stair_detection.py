@@ -48,9 +48,9 @@ class StairDetection:
         # end_left = border_offset
         # end_right = image.shape[1] - border_offset
 
-        if not can_see_pictograms and not can_see_obstacles:
+        if not can_see_obstacles:
             logging.info("Detection: No pictograms and obstacles found -> Rotate right")
-            return Direction.ROTATE_BODY_RIGHT, rotation_angle, False  # stair not found
+            return Direction.ROTATE_BODY_LEFT, rotation_angle, False  # stair not found
 
         # inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0].position)
         # blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])

@@ -64,8 +64,8 @@ def detect(image):
     names = model.module.names if hasattr(model, 'module') else model.names  # get class names
 
     # For Testing purpose without camera
-    if image == 1:
-        image = cv2.imread(in_image_path)  # 1280 x 960
+    # if image == 1:
+    #     image = cv2.imread(in_image_path)  # 1280 x 960
     # print("img shape: {}".format(image.shape))
 
     img = letterbox(image, imgsz, stride)[0]

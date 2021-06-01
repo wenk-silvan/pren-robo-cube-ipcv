@@ -12,10 +12,10 @@ class Drive:
         self._serial_handler = serial_handler
         self._sensors = Sensor(self._serial_handler)
         self._climb = Climb(self._serial_handler)
-        self._climb.tail_up_slow(40)
-        self._climb.head_down_slow(50)
-        self._climb.tail_down_fast(9)
-        self._climb.head_up_fast(4)
+        # self._climb.tail_up_slow(40)
+        # self._climb.head_down_slow(50)
+        # self._climb.tail_down_fast(9)
+        # self._climb.head_up_fast(4)
         self.wheels_orientation = WheelState.STRAIGHT
         self._rotate_all_wheels(1)
 
