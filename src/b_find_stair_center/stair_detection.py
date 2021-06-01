@@ -126,8 +126,9 @@ class StairDetection:
         lines = StairDetection._remove_skew_lines(lines, int(self.conf["steps_lines_min_angle"]),
                                                   int(self.conf["steps_lines_max_angle"]))
         lines.sort(key=lambda l: l.p1.y, reverse=True)  # sort lines by y1 from bottom to top
-        return StairDetection._remove_vertically_close_lines(lines, img_height,
+        lines = StairDetection._remove_vertically_close_lines(lines, img_height,
                                                              int(self.conf["steps_lines_min_line_gap"]))
+        return StairDetection._remove_outlier_lines(lines)
 
     @staticmethod
     def _calculate_stair_position(img_width, intersections_left, intersections_right, bottom_line):
@@ -180,3 +181,22 @@ class StairDetection:
                 lines_not_close.append(l)
                 previous_y1 = l.p1.y
         return lines_not_close
+
+    @staticmethod
+    def _remove_outlier_lines(lines):
+        min_skewness = 10
+        lines_skew_left = [l for l in lines if l.p1.y - l.p2.y > 0]
+        lines_skew_right = [l for l in lines if l.p1.y - l.p2.y < 0]
+        y_distances_abs = [abs(l.p1.y - l.p2.y) for l in lines]
+        avg_y_distance = sum(y_distances_abs) / len(y_distances_abs)
+        if avg_y_distance < min_skewness:
+            logging.info("No outlier lines found, none removed")
+            return lines  # don't remove outliers if stair is already straight
+
+        for l in lines:
+            if len(lines_skew_left) <= 2 and len(lines_skew_right) > 3:
+                logging.info("Removed %s left-skewed outliers.", len(lines_skew_left))
+                return lines_skew_right
+            elif len(lines_skew_right) <= 2 and len(lines_skew_left) > 3:
+                logging.info("Removed %s right-skewed outliers.", len(lines_skew_right))
+                return lines_skew_left
