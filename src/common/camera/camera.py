@@ -1,6 +1,5 @@
 import time
 import imutils
-from imutils.video.pivideostream import PiVideoStream
 import cv2
 
 
@@ -19,6 +18,7 @@ class Camera:
         Read the current frame and resize to 1280x980
         :return:
         """
-        frame = self.stream.read()
+        _, frame = self.stream.read()
+        print(frame)
         flipped_frame = cv2.flip(frame, -1)  # flip vertically
         return imutils.resize(image=flipped_frame, width=1280, height=960)

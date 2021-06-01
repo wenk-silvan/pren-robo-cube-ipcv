@@ -10,7 +10,7 @@ import socketserver
 from threading import Condition
 from http import server
 from src.common.object_detection import ObjectDetection
-import picamera
+import time
 from configparser import ConfigParser
 from src.b_find_stair_center.image_processing import ImageProcessing
 from src.b_find_stair_center.stair_detection import StairDetection
@@ -57,23 +57,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 continue
             cv2.line(img, p1, p2, color, 2)
 
-    def detect_obstacles(self, img):
-        detection_obstacle_scale = 2.5
-        detection_obstacle_neighbours = 3
-        obstacle_detection = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
-        obstacles = obstacle_detection.detect(img, 2000, 30000, detection_obstacle_scale, detection_obstacle_neighbours)
+    def detect_obstacles(self, img, detector):
+        obstacles = detector.detect_obstacles(img)
         violet = (143, 0, 255)
-        obstacle_detection.draw(img, obstacles, violet)
+        detector.draw_objects(img, obstacles, violet)
 
-    def detect_pictograms(self, img):
+    def detect_pictograms(self, img, detector):
         detection_pictogram_scale = 1.15
         detection_pictogram_neighbours = 3
-        pictogram_detection = ObjectDetection("resources/cascades/pictogram/",
-                                              ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
-        pictograms = pictogram_detection.detect(img, 400, 15000, detection_pictogram_scale,
+        pictograms = detector.detect_pictograms(img, 100, 15000, detection_pictogram_scale,
                                                 detection_pictogram_neighbours)
         yellow = (255, 255, 0)
-        pictogram_detection.draw(img, pictograms, yellow)
+        detector.draw_objects(img, pictograms, yellow)
 
     def detect_stair(self, conf, img):
         stair = StairDetection(conf, ImageProcessing(conf))
@@ -87,17 +82,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         conf = config_object["B_FIND_STAIR_CENTER"]
 
         cv2.CV_LOAD_IMAGE_COLOR = 1
-        npframe = np.fromstring(frame, dtype=np.uint8)
-        image = cv2.imdecode(npframe, cv2.CV_LOAD_IMAGE_COLOR)
-        image = cv2.flip(image, 0)
-        self.detect_pictograms(image)
-        self.detect_obstacles(image)
+        # npframe = np.fromstring(frame, dtype=np.uint8)
+        # image = cv2.imdecode(npframe, cv2.CV_LOAD_IMAGE_COLOR)
+        image = cv2.flip(frame, -1)
+        
+        detector = ObjectDetection("resources/cascades/pictogram/",
+                                              ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
+        self.detect_pictograms(image, detector)
+        # self.detect_obstacles(image, detector)
         self.detect_stair(conf, image)
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         result, jpg = cv2.imencode('.jpg', image, encode_param)
         return jpg
 
     def do_GET(self):
+        stream = cv2.VideoCapture(0)
+        stream.set(3, 1280)
+        stream.set(4, 960)
+        time.sleep(1)
         if self.path == '/':
             self.send_response(301)
             self.send_header('Location', '/index.html')
@@ -118,9 +120,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             try:
                 while True:
-                    with output.condition:
-                        output.condition.wait()
-                        frame = output.frame
+                    _, frame = stream.read()
+                    print("Take snapshot")
                     img = self.process_image(frame)
                     self.wfile.write(b'--FRAME\r\n')
                     self.send_header('Content-Type', 'image/jpeg')
@@ -141,15 +142,18 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
+address = ('', 8000)
+server = StreamingServer(address, StreamingHandler)
+server.serve_forever()
 
-with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
-    output = StreamingOutput()
-    # Uncomment the next line to change your Pi's Camera rotation (in degrees)
-    # camera.rotation = 90
-    camera.start_recording(output, format='mjpeg')
-    try:
-        address = ('', 8000)
-        server = StreamingServer(address, StreamingHandler)
-        server.serve_forever()
-    finally:
-        camera.stop_recording()
+# with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
+#     output = StreamingOutput()
+#     # Uncomment the next line to change your Pi's Camera rotation (in degrees)
+#     # camera.rotation = 90
+#     camera.start_recording(output, format='mjpeg')
+#     try:
+#         address = ('', 8000)
+#         server = StreamingServer(address, StreamingHandler)
+#         server.serve_forever()
+#     finally:
+#         camera.stop_recording()
