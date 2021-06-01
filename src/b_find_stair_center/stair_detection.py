@@ -48,7 +48,7 @@ class StairDetection:
         # end_left = border_offset
         # end_right = image.shape[1] - border_offset
 
-        if not can_see_obstacles:
+        if not can_see_obstacles or len(lines_horizontal) < 1:
             logging.info("Detection: No pictograms and obstacles found -> Rotate right")
             return Direction.ROTATE_BODY_LEFT, rotation_angle, False  # stair not found
 
@@ -56,10 +56,11 @@ class StairDetection:
         # blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
 
         # TODO: Fine tune measurements
-        angle = self._get_angle(lines_horizontal[0])
+        bottom_line = lines_horizontal[0]
+        angle = self._get_angle(bottom_line)
         pictogram_width = 60
-        perspective_offset = 300
-        horizontal_tolerance = 10
+        perspective_offset = 250
+        horizontal_tolerance = 20
         pictogram_top_gap = 100
         mm_per_px = 0.313
 
@@ -69,6 +70,7 @@ class StairDetection:
                 return Direction.DRIVE_BACK, 10, False
             pictogram: Pictogram = pictograms[0]
             drive_distance = pictogram.top_left.x - perspective_offset - pictogram.position + (pictogram_width / 2)
+            logging.info("Drive distance = %s = %s - %s - %s + (%s / 2)", drive_distance, pictogram.top_left.x, perspective_offset, pictogram.position, pictogram_width)
             if pictogram_top_gap < pictogram.top_left.y:  # stair is too far away
                 logging.info("Detection: Stair is straight, pictos found, too far away -> Drive forward")
                 return Direction.DRIVE_FORWARD, 20, False
@@ -82,12 +84,13 @@ class StairDetection:
                 return Direction.DRIVE_FORWARD, 0, True
 
         else:
-            if lines_horizontal[0].p1.y < lines_horizontal[0].p2.y:  # stair is skew to the right
-                logging.info("Detection: Stair is skew to the right, pictos found -> Rotate left")
-                return Direction.ROTATE_BODY_LEFT, rotation_angle, False
-            elif lines_horizontal[0].p1.y > lines_horizontal[0].p2.y:  # stair is skew to the left
-                logging.info("Detection: Stair is skew to the left, pictos found -> Rotate right")
+            logging.info("Bottom Line - Left: %s,%s - Right %s,%s", bottom_line.p1.x, bottom_line.p1.y, bottom_line.p2.x, bottom_line.p2.y)
+            if bottom_line.p1.y < bottom_line.p2.y:  # stair is skew to the left
+                logging.info("Detection: Stair is skew to the right, pictos found -> Rotate right")
                 return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
+            elif bottom_line.p1.y > bottom_line.p2.y:  # stair is skew to the right
+                logging.info("Detection: Stair is skew to the left, pictos found -> Rotate left")
+                return Direction.ROTATE_BODY_LEFT, rotation_angle, False
             else:
                 logging.error("Stair position is in an unexpected state.")
 
@@ -184,6 +187,7 @@ class StairDetection:
 
     @staticmethod
     def _remove_outlier_lines(lines):
+        if len(lines) < 1: return lines
         min_skewness = 10
         lines_skew_left = [l for l in lines if l.p1.y - l.p2.y > 0]
         lines_skew_right = [l for l in lines if l.p1.y - l.p2.y < 0]
@@ -193,10 +197,11 @@ class StairDetection:
             logging.info("No outlier lines found, none removed")
             return lines  # don't remove outliers if stair is already straight
 
-        for l in lines:
-            if len(lines_skew_left) <= 2 and len(lines_skew_right) > 3:
-                logging.info("Removed %s left-skewed outliers.", len(lines_skew_left))
-                return lines_skew_right
-            elif len(lines_skew_right) <= 2 and len(lines_skew_left) > 3:
-                logging.info("Removed %s right-skewed outliers.", len(lines_skew_right))
-                return lines_skew_left
+        if len(lines_skew_left) <= 2 and len(lines_skew_right) >= 3:
+            logging.info("Removed %s left-skewed outliers.", len(lines_skew_left))
+            return lines_skew_right
+        elif len(lines_skew_right) <= 2 and len(lines_skew_left) >= 3:
+            logging.info("Removed %s right-skewed outliers.", len(lines_skew_right))
+            return lines_skew_left
+        logging.info("No outlier lines found, none removed")
+        return lines

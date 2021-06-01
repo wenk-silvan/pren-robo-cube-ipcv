@@ -31,7 +31,7 @@ def run(conf, path: Path, serial: SerialHandler):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
     run(conf_parser["D_CLIMB_STAIR"], get_fake_path(), SerialHandler())

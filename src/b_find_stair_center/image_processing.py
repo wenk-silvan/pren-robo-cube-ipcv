@@ -111,7 +111,15 @@ class ImageProcessing:
         )
         if detected is None:
             return []
-        return [Line(Point(l[0][0], l[0][1]), Point(l[0][2], l[0][3])) for l in detected]
+        lines = []
+        for l in detected:
+            p1 = Point(l[0][0], l[0][1])
+            p2 = Point(l[0][2], l[0][3])
+            if p1.x < p2.x:
+                lines.append(Line(p1, p2))
+            else:
+                lines.append(Line(p2, p1))
+        return lines
 
     @staticmethod
     def _determinant(a, b):
