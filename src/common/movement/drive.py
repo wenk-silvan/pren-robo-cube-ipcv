@@ -228,7 +228,7 @@ class Drive:
                   + distance_cm.to_bytes(1, byteorder='big', signed=False)
         self._serial_handler.send_command(command)
 
-        return True
+        return self._polling_motors()
 
     def _polling_motors(self):
         """
