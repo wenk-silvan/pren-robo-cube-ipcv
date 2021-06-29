@@ -1,3 +1,8 @@
+#!/bin/python3
+import sys
+sys.path.append('/home/pi/pren/pren-robo-cube-ipcv/')
+
+import cv2
 from src.a_detect_pictogram import course_detect_pictogram
 from src.b_find_stair_center import course_find_stair_center
 from src.c_pathfinding import course_pathfinding
@@ -12,12 +17,12 @@ import logging
 
 def start():
     serial = SerialHandler()
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
     camera = Camera()
 
-    pictogram = course_detect_pictogram.run()
+    # pictogram = course_detect_pictogram.run(camera=camera)
     snapshot = course_find_stair_center.run(conf=conf_parser["B_FIND_STAIR_CENTER"], serial=serial, camera=camera)
     path: Path = course_pathfinding.run(conf=conf_parser["C_PATHFINDING"], snapshot=snapshot)
     course_climb_stair.run(conf=conf_parser["D_CLIMB_STAIR"], path=path, serial=serial)
