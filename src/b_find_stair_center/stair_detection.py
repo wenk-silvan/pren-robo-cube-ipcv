@@ -41,58 +41,65 @@ class StairDetection:
             value (int): The value by which should be moved. Either angle for rotating or millimeters for driving.
             is_centered (boolean): Flag whether the robot is in the correct spot to move on to pathfinding.
         """
-        max_angle = float(self.conf["stair_straight_max_angle"])
         rotation_angle = int(self.conf["rotation_angle"])
-        can_see_pictograms = len(pictograms) > 0
+        if len(pictograms) >= 3:
+            return Direction.DRIVE_FORWARD, 0, True
+        else:
+            return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
+
+
+        # max_angle = float(self.conf["stair_straight_max_angle"])
+        # rotation_angle = int(self.conf["rotation_angle"])
+        # can_see_pictograms = len(pictograms) > 0
         # border_offset = int(self.conf["stair_border_offset"])
         # end_left = border_offset
         # end_right = image.shape[1] - border_offset
 
-        if not can_see_obstacles or len(lines_horizontal) < 1:
-            logging.info("Detection: No pictograms and obstacles found -> Rotate right")
-            return Direction.ROTATE_BODY_LEFT, rotation_angle, False  # stair not found
+        # if not can_see_obstacles or len(lines_horizontal) < 1:
+        #     logging.info("Detection: No pictograms and obstacles found -> Rotate right")
+        #     return Direction.ROTATE_BODY_LEFT, rotation_angle, False  # stair not found
 
         # inters_left, inters_right = self._calculate_intersections(lines_vertical, lines_horizontal, pictograms[0].position)
         # blx, brx, angle = self._calculate_stair_position(image.shape[1], inters_left, inters_right, lines_horizontal[0])
 
         # TODO: Fine tune measurements
-        bottom_line = lines_horizontal[0]
-        angle = self._get_angle(bottom_line)
-        pictogram_width = 60
-        perspective_offset = 250
-        horizontal_tolerance = 20
-        pictogram_top_gap = 100
-        mm_per_px = 0.313
+        # bottom_line = lines_horizontal[0]
+        # angle = self._get_angle(bottom_line)
+        # pictogram_width = 60
+        # perspective_offset = 250
+        # horizontal_tolerance = 20
+        # pictogram_top_gap = 100
+        # mm_per_px = 0.313
 
-        if angle <= max_angle:  # stair is straight
-            if not can_see_pictograms:  # stair is too close
-                logging.info("Detection: Stair is straight, no pictos found -> Drive back")
-                return Direction.DRIVE_BACK, 10, False
-            pictogram: Pictogram = pictograms[0]
-            drive_distance = pictogram.top_left.x - perspective_offset - pictogram.position + (pictogram_width / 2)
-            logging.info("Drive distance = %s = %s - %s - %s + (%s / 2)", drive_distance, pictogram.top_left.x, perspective_offset, pictogram.position, pictogram_width)
-            if pictogram_top_gap < pictogram.top_left.y:  # stair is too far away
-                logging.info("Detection: Stair is straight, pictos found, too far away -> Drive forward")
-                return Direction.DRIVE_FORWARD, 20, False
-            elif drive_distance > horizontal_tolerance:  # stair is straight but too far right
-                logging.info("Detection: Stair is straight, pictos found, robo too far left -> Drive right")
-                return Direction.DRIVE_RIGHT, drive_distance * mm_per_px, False
-            elif drive_distance < -horizontal_tolerance:  # stair is straight but too far left
-                logging.info("Detection: Stair is straight, pictos found, robo too far right -> Drive left")
-                return Direction.DRIVE_LEFT, abs(drive_distance) * mm_per_px, False
-            else:  # stair is centered
-                return Direction.DRIVE_FORWARD, 0, True
+        # if angle <= max_angle:  # stair is straight
+        #     if not can_see_pictograms:  # stair is too close
+        #         logging.info("Detection: Stair is straight, no pictos found -> Drive back")
+        #         return Direction.DRIVE_BACK, 10, False
+        #     pictogram: Pictogram = pictograms[0]
+        #     drive_distance = pictogram.top_left.x - perspective_offset - pictogram.position + (pictogram_width / 2)
+        #     logging.info("Drive distance = %s = %s - %s - %s + (%s / 2)", drive_distance, pictogram.top_left.x, perspective_offset, pictogram.position, pictogram_width)
+        #     if pictogram_top_gap < pictogram.top_left.y:  # stair is too far away
+        #         logging.info("Detection: Stair is straight, pictos found, too far away -> Drive forward")
+        #         return Direction.DRIVE_FORWARD, 20, False
+        #     elif drive_distance > horizontal_tolerance:  # stair is straight but too far right
+        #         logging.info("Detection: Stair is straight, pictos found, robo too far left -> Drive right")
+        #         return Direction.DRIVE_RIGHT, drive_distance * mm_per_px, False
+        #     elif drive_distance < -horizontal_tolerance:  # stair is straight but too far left
+        #         logging.info("Detection: Stair is straight, pictos found, robo too far right -> Drive left")
+        #         return Direction.DRIVE_LEFT, abs(drive_distance) * mm_per_px, False
+        #     else:  # stair is centered
+        #         return Direction.DRIVE_FORWARD, 0, True
 
-        else:
-            logging.info("Bottom Line - Left: %s,%s - Right %s,%s", bottom_line.p1.x, bottom_line.p1.y, bottom_line.p2.x, bottom_line.p2.y)
-            if bottom_line.p1.y < bottom_line.p2.y:  # stair is skew to the left
-                logging.info("Detection: Stair is skew to the right, pictos found -> Rotate right")
-                return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
-            elif bottom_line.p1.y > bottom_line.p2.y:  # stair is skew to the right
-                logging.info("Detection: Stair is skew to the left, pictos found -> Rotate left")
-                return Direction.ROTATE_BODY_LEFT, rotation_angle, False
-            else:
-                logging.error("Stair position is in an unexpected state.")
+        # else:
+        #     logging.info("Bottom Line - Left: %s,%s - Right %s,%s", bottom_line.p1.x, bottom_line.p1.y, bottom_line.p2.x, bottom_line.p2.y)
+        #     if bottom_line.p1.y < bottom_line.p2.y:  # stair is skew to the left
+        #         logging.info("Detection: Stair is skew to the right, pictos found -> Rotate right")
+        #         return Direction.ROTATE_BODY_RIGHT, rotation_angle, False
+        #     elif bottom_line.p1.y > bottom_line.p2.y:  # stair is skew to the right
+        #         logging.info("Detection: Stair is skew to the left, pictos found -> Rotate left")
+        #         return Direction.ROTATE_BODY_LEFT, rotation_angle, False
+        #     else:
+        #         logging.error("Stair position is in an unexpected state.")
 
     def _get_angle(self, line: Line):
         angle_rad = np.math.atan2(abs(line.p1.y - line.p2.y), abs(line.p1.x - line.p2.x))

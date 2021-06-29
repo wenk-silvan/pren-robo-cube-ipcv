@@ -10,10 +10,8 @@ from src.common.object_detection import ObjectDetection
 from src.b_find_stair_center.stair_detection import StairDetection
 
 
-def run(conf, serial: SerialHandler, camera):
+def run(conf, camera: Camera, drive: Drive):
     try:
-        drive = Drive(serial)
-
         object_detection = ObjectDetection("resources/cascades/pictogram/",
                                               ['hammer.xml', 'sandwich.xml', 'rule.xml', 'paint.xml', 'pencil.xml'])
         stair_detection = StairDetection(conf, ImageProcessing(conf))
@@ -38,7 +36,8 @@ def try_to_center(conf, camera, drive, object_detection, stair_detection):
                                                         int(conf["detection_pictogram_max_area"]),
                                                         float(conf["detection_pictogram_scale"]),
                                                         int(conf["detection_pictogram_neighbours"]))
-    obstacles = object_detection.detect_obstacles(image)
+    # obstacles = object_detection.detect_obstacles(image)
+    obstacles = []
 
     lines_vertical, lines_horizontal = stair_detection.detect_lines(image)
 
@@ -65,4 +64,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
-    run(conf=conf_parser["B_FIND_STAIR_CENTER"], serial=SerialHandler(), camera=Camera())
+    serial = SerialHandler()
+    run(conf=conf_parser["B_FIND_STAIR_CENTER"], camera=Camera(), drive=Drive(serial))

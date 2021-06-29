@@ -19,10 +19,8 @@ def get_fake_path():
     return path
 
 
-def run(conf, path: Path, serial: SerialHandler):
+def run(conf, path: Path, drive: Drive, climb: Climb):
     try:
-        drive = Drive(serial)
-        climb = Climb(serial)
         climber = Climber(conf, drive, climb)
         result = climber.move(path)
         logging.info("Clearing the stair was " + ("successful." if result else "unsuccessful."))
@@ -34,4 +32,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     conf_parser = ConfigParser()
     conf_parser.read("resources/config.ini")
-    run(conf_parser["D_CLIMB_STAIR"], get_fake_path(), SerialHandler())
+    serial = SerialHandler()
+    run(conf_parser["D_CLIMB_STAIR"], get_fake_path(), Drive(serial), Climb(serial))
