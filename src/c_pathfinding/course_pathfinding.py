@@ -14,9 +14,9 @@ import logging
 def run(conf, snapshot):
     try:
         # TODO: Adjust detection parameters
-        detector = ObjectDetection("resources/cascades/obstacle/", ["obstacle.xml"])
-        obstacles = detector.detect_obstacles(snapshot, 5000, 100000, float(conf["detection_obstacle_scale"]),
-                                              int(conf["detection_obstacle_neighbours"]))
+        detection = ObjectDetection("", [])
+        obstacles = detection.detect_obstacles(snapshot)
+        
         manipulator = ImageManipulator(snapshot)
         image, transform_matrix = manipulator.transform_to_2d((600, 600))
         obstacles = [manipulator.transform_obstacle_coordinates(transform_matrix, o) for o in obstacles]
